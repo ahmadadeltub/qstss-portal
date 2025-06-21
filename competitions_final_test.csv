@@ -1,0 +1,21 @@
+Type,Competition Name,Category,Status,Start Date,End Date,Registration Deadline,Max Participants,Actual Participants,Total Registrations,Organizer,Organizer Department,Description,Location,Requirements,Prizes,Teacher Name,Teacher Department,Students Registered,Student ID,Student Name,Grade,Class
+COMPETITION,"Qatar National Mathematics Olympiad 2025",MATH,upcoming,7/15/2025,7/16/2025,6/30/2025,100,4,2,"System Administrator",Administration,"Annual mathematics competition for high school students across Qatar, hosted by Qatar Science and Technology Secondary School for Boys","","","1st Place: Gold Medal + 2000 QAR + University Scholarship (2000 QAR); 2nd Place: Silver Medal + 1200 QAR (1200 QAR); 3rd Place: Bronze Medal + 800 QAR (800 QAR)","",,,,"",,
+TEACHER,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","System Administrator",Administration,3,,"",,
+TEACHER,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","han han",Science,1,,"",,
+STUDENT,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","",,,31063405109,"TAMEEM A.HAKEEM A A BA-NOAMAN",9,09/1
+STUDENT,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","",,,31063406096,"GHANIM ABDULAZIZ J K AL-HAJAJI",9,09/1
+STUDENT,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","",,,31063401951,"ESSA ABDULRAHMAN A A ZYARA",9,09/1
+STUDENT,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","",,,31063405638,"AHMED ALI A A AL-LENQAWI",9,09/1
+COMPETITION,"Gulf Science Fair 2025",STEM,upcoming,8/20/2025,8/22/2025,7/30/2025,80,5,2,"System Administrator",Administration,"Regional science fair showcasing innovative science projects from students across the Gulf region","","","1st Place: Research Grant + Trophy + 4000 QAR (4000 QAR); 2nd Place: Laboratory Equipment Set + 2400 QAR (2400 QAR); 3rd Place: Science Book Collection + 1200 QAR (1200 QAR)","",,,,"",,
+TEACHER,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","System Administrator",Administration,3,,"",,
+TEACHER,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","han han",Science,2,,"",,
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31063405109,"TAMEEM A.HAKEEM A A BA-NOAMAN",9,09/1
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31063406096,"GHANIM ABDULAZIZ J K AL-HAJAJI",9,09/1
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31063401951,"ESSA ABDULRAHMAN A A ZYARA",9,09/1
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31063407605,"HASSAN AQEEL A B AL-KHUZAEI",9,09/1
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31163402014,"MOHAMMED GHAREEB M Z AL-ABSI",9,09/1
+COMPETITION,"Arabic Literary Excellence Competition",ARABIC,upcoming,9/10/2025,9/10/2025,8/25/2025,60,,,"System Administrator",Administration,"Creative writing and poetry contest celebrating Arabic literature and contemporary expression","","","1st Place: Publication Opportunity + 1600 QAR + Mentorship (1600 QAR); 2nd Place: Writing Workshop Access + 1000 QAR (1000 QAR); 3rd Place: Certificate + 600 QAR (600 QAR)","",,,,"",,
+COMPETITION,"Qatar Technology Innovation Challenge 2025",AI,upcoming,10/5/2025,10/7/2025,9/20/2025,50,2,1,"System Administrator",Administration,"Student-led technology and programming projects aligned with Qatar National Vision 2030","","","1st Place: Tech Startup Mentorship + 3200 QAR + Internship Opportunity (3200 QAR); 2nd Place: Professional Development Course + 2000 QAR (2000 QAR); 3rd Place: Tech Equipment Package + 1200 QAR (1200 QAR)","",,,,"",,
+TEACHER,"Qatar Technology Innovation Challenge 2025",AI,,,,,,,,"",,"","","","","System Administrator",Administration,2,,"",,
+STUDENT,"Qatar Technology Innovation Challenge 2025",AI,,,,,,,,"",,"","","","","",,,31063407605,"HASSAN AQEEL A B AL-KHUZAEI",9,09/1
+STUDENT,"Qatar Technology Innovation Challenge 2025",AI,,,,,,,,"",,"","","","","",,,31163402108,"NASSER HAMAD N B AHMED",9,09/1

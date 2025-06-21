@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Competition Warning System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .warning {
+            background: rgba(255, 152, 0, 0.2);
+            border: 1px solid #ff9800;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196f3;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff40;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .result {
+            margin-top: 10px;
+            min-height: 40px;
+        }
+        .highlight {
+            background: rgba(255, 255, 0, 0.3);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .test-data {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚨 Cross-Competition Warning System Test</h1>
+    
+    <div class="test-container">
+        <h2>🎯 Test Overview</h2>
+        <p>This test verifies the new warning system that notifies teachers when registering students who are already registered in other competitions.</p>
+        
+        <div class="info">
+            <h3>✨ Features Being Tested:</h3>
+            <ul>
+                <li><strong>Cross-Competition Conflict Detection:</strong> Identifies students registered in other competitions</li>
+                <li><strong>Warning Dialog:</strong> Shows detailed warning information to teachers</li>
+                <li><strong>Proceed Option:</strong> Allows teachers to continue registration despite warnings</li>
+                <li><strong>Multiple Competition Tracking:</strong> Shows all competitions a student is registered in</li>
+                <li><strong>Non-Blocking Warnings:</strong> System warns but does not prevent registration</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="step">
+        <h3>Step 1: Authentication</h3>
+        <button onclick="authenticate()">🔐 Login as Admin</button>
+        <div id="authResult" class="result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Setup Test Data</h3>
+        <button onclick="setupTestData()">📊 Load Test Data</button>
+        <div id="setupResult" class="result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: Create Initial Registrations</h3>
+        <button onclick="createInitialRegistrations()">📝 Create Test Registrations</button>
+        <div id="initialResult" class="result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 4: Test Cross-Competition Warning System</h3>
+        <button onclick="testCrossCompetitionWarnings()">⚠️ Test Warning System</button>
+        <div id="warningResult" class="result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 5: Test Registration with Warnings</h3>
+        <button onclick="testRegistrationWithWarnings()">✅ Test Proceed Despite Warnings</button>
+        <div id="proceedResult" class="result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 6: Verify Final State</h3>
+        <button onclick="verifyFinalState()">🔍 Verify All Registrations</button>
+        <div id="verifyResult" class="result"></div>
+    </div>
+
+    <div class="step">
+        <h3>🎮 Manual UI Testing</h3>
+        <button onclick="openFrontend()">🌐 Open Frontend for Manual Testing</button>
+        <div id="manualResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        let authToken = '';
+        let testData = {
+            competitions: [],
+            students: [],
+            registrations: []
+        };
+
+        async function authenticate() {
+            const resultDiv = document.getElementById('authResult');
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Authenticating...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Authentication successful<br>
+                            <strong>User:</strong> ${data.user.firstName} ${data.user.lastName}<br>
+                            <strong>Role:</strong> ${data.user.role}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Authentication failed: ${error.message}</div>`;
+            }
+        }
+
+        async function setupTestData() {
+            const resultDiv = document.getElementById('setupResult');
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading test data...</p></div>';
+            
+            try {
+                // Get competitions
+                const competitionsResponse = await fetch(`${API_BASE}/competitions`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const competitionsData = await competitionsResponse.json();
+                testData.competitions = competitionsData.data || competitionsData;
+                
+                // Get students
+                const studentsResponse = await fetch(`${API_BASE}/students?limit=10`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const studentsData = await studentsResponse.json();
+                testData.students = studentsData.data || studentsData;
+                
+                if (testData.competitions.length >= 2 && testData.students.length >= 3) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Test data loaded successfully<br>
+                            <strong>Competitions:</strong> ${testData.competitions.length}<br>
+                            <strong>Students:</strong> ${testData.students.length}
+                            <div class="test-data">
+                                Test Competitions:
+                                ${testData.competitions.slice(0, 2).map(c => `• ${c.name}`).join('<br>')}
+                                
+                                Test Students:
+                                ${testData.students.slice(0, 3).map(s => `• ${s.firstName} ${s.lastName} (${s.studentId})`).join('<br>')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Insufficient test data (need at least 2 competitions and 3 students)');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Failed to load test data: ${error.message}</div>`;
+            }
+        }
+
+        async function createInitialRegistrations() {
+            const resultDiv = document.getElementById('initialResult');
+            if (!authToken || testData.competitions.length < 2 || testData.students.length < 3) {
+                resultDiv.innerHTML = '<div class="error">❌ Please complete previous steps first</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Creating initial registrations...</p></div>';
+            
+            try {
+                // Register students 1 and 2 for competition 1
+                const registration1Response = await fetch(`${API_BASE}/registrations`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        competitionId: testData.competitions[0]._id,
+                        studentIds: [testData.students[0]._id, testData.students[1]._id]
+                    })
+                });
+                
+                const registration1Data = await registration1Response.json();
+                
+                if (registration1Response.ok) {
+                    testData.registrations.push(registration1Data.registration);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Initial registration created successfully<br>
+                            <strong>Competition:</strong> ${testData.competitions[0].name}<br>
+                            <strong>Students registered:</strong> 
+                            ${testData.students[0].firstName} ${testData.students[0].lastName}, 
+                            ${testData.students[1].firstName} ${testData.students[1].lastName}<br>
+                            <strong>Registration ID:</strong> ${registration1Data.registration._id}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(registration1Data.error || 'Failed to create initial registration');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Failed to create initial registrations: ${error.message}</div>`;
+            }
+        }
+
+        async function testCrossCompetitionWarnings() {
+            const resultDiv = document.getElementById('warningResult');
+            if (!authToken || testData.registrations.length === 0) {
+                resultDiv.innerHTML = '<div class="error">❌ Please complete previous steps first</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing cross-competition warning system...</p></div>';
+            
+            try {
+                // Test the new cross-competition conflicts endpoint
+                const conflictResponse = await fetch(`${API_BASE}/registrations/check-cross-competition-conflicts`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        competitionId: testData.competitions[1]._id, // Different competition
+                        studentIds: [testData.students[0]._id, testData.students[2]._id] // Student 0 is already registered, Student 2 is new
+                    })
+                });
+                
+                const conflictData = await conflictResponse.json();
+                
+                if (conflictResponse.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Cross-competition warning system working correctly<br>
+                            <strong>Has Warnings:</strong> ${conflictData.hasWarnings}<br>
+                            <strong>Number of Warnings:</strong> ${conflictData.warnings.length}
+                            
+                            ${conflictData.hasWarnings ? `
+                                <div class="warning">
+                                    <strong>⚠️ Detected Conflicts:</strong><br>
+                                    ${conflictData.warnings.map(w => 
+                                        `• ${w.studentName} is already in: ${w.competitions.join(', ')}`
+                                    ).join('<br>')}
+                                </div>
+                            ` : `
+                                <div class="info">
+                                    ℹ️ No conflicts detected (this might indicate an issue with test data)
+                                </div>
+                            `}
+                            
+                            <div class="test-data">
+                                API Response: ${JSON.stringify(conflictData, null, 2)}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(conflictData.error || 'Cross-competition check failed');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Warning system test failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testRegistrationWithWarnings() {
+            const resultDiv = document.getElementById('proceedResult');
+            if (!authToken || testData.registrations.length === 0) {
+                resultDiv.innerHTML = '<div class="error">❌ Please complete previous steps first</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing registration with warnings...</p></div>';
+            
+            try {
+                // Try to register students in a different competition (including already registered student)
+                const registrationResponse = await fetch(`${API_BASE}/registrations`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        competitionId: testData.competitions[1]._id, // Different competition
+                        studentIds: [testData.students[0]._id, testData.students[2]._id] // Student 0 is already registered, Student 2 is new
+                    })
+                });
+                
+                const registrationData = await registrationResponse.json();
+                
+                if (registrationResponse.ok) {
+                    const hasWarnings = registrationData.warnings && registrationData.warnings.length > 0;
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Registration with warnings successful!<br>
+                            <strong>Competition:</strong> ${testData.competitions[1].name}<br>
+                            <strong>Students registered:</strong> 2<br>
+                            <strong>Warnings included:</strong> ${hasWarnings ? 'Yes' : 'No'}
+                            
+                            ${hasWarnings ? `
+                                <div class="warning">
+                                    <strong>⚠️ Warnings received:</strong><br>
+                                    ${registrationData.warnings.map(w => `• ${w}`).join('<br>')}
+                                </div>
+                            ` : ''}
+                            
+                            <div class="test-data">
+                                Registration Response: ${JSON.stringify(registrationData, null, 2)}
+                            </div>
+                        </div>
+                    `;
+                    
+                    testData.registrations.push(registrationData.registration);
+                } else {
+                    throw new Error(registrationData.error || 'Registration failed');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Registration with warnings test failed: ${error.message}</div>`;
+            }
+        }
+
+        async function verifyFinalState() {
+            const resultDiv = document.getElementById('verifyResult');
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Verifying final state...</p></div>';
+            
+            try {
+                // Get all registrations to verify the final state
+                const registrationsResponse = await fetch(`${API_BASE}/registrations/my`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const registrationsData = await registrationsResponse.json();
+                
+                // Count students in multiple competitions
+                const studentCompetitionMap = {};
+                registrationsData.forEach(reg => {
+                    reg.students.forEach(student => {
+                        const studentId = student.student._id;
+                        if (!studentCompetitionMap[studentId]) {
+                            studentCompetitionMap[studentId] = {
+                                name: `${student.student.firstName} ${student.student.lastName}`,
+                                competitions: []
+                            };
+                        }
+                        studentCompetitionMap[studentId].competitions.push(reg.competition.name);
+                    });
+                });
+                
+                const multiCompetitionStudents = Object.values(studentCompetitionMap)
+                    .filter(student => student.competitions.length > 1);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Final state verification complete<br>
+                        <strong>Total Registrations:</strong> ${registrationsData.length}<br>
+                        <strong>Students in Multiple Competitions:</strong> ${multiCompetitionStudents.length}
+                        
+                        ${multiCompetitionStudents.length > 0 ? `
+                            <div class="info">
+                                <strong>📊 Multi-Competition Students:</strong><br>
+                                ${multiCompetitionStudents.map(student => 
+                                    `• ${student.name}: ${student.competitions.join(', ')}`
+                                ).join('<br>')}
+                            </div>
+                        ` : ''}
+                        
+                        <div class="test-data">
+                            All Registrations: ${JSON.stringify(registrationsData, null, 2)}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Verification failed: ${error.message}</div>`;
+            }
+        }
+
+        function openFrontend() {
+            const resultDiv = document.getElementById('manualResult');
+            
+            // Open frontend in new tab
+            const newWindow = window.open('http://localhost:3001/competitions', '_blank');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    🌐 Frontend opened in new tab<br>
+                    
+                    <div class="highlight">
+                        <strong>Manual Testing Steps:</strong>
+                    </div>
+                    
+                    <ol style="margin-left: 20px; line-height: 1.8;">
+                        <li>Login with admin credentials: <code>admin@qstss.edu.qa</code> / <code>admin123</code></li>
+                        <li>Navigate to the Competitions page</li>
+                        <li>Click "Register Students" on any competition</li>
+                        <li>Select students who are already registered in other competitions</li>
+                        <li><span class="highlight">Verify that a warning dialog appears</span></li>
+                        <li>Check that the warning shows which competitions the students are already in</li>
+                        <li>Verify you can click "Proceed Anyway" to complete the registration</li>
+                        <li>Confirm the registration succeeds despite the warnings</li>
+                    </ol>
+                    
+                    <div class="warning">
+                        <strong>⚠️ Expected Behavior:</strong><br>
+                        • Warning dialog should appear when selecting already-registered students<br>
+                        • Dialog should show specific competition names<br>
+                        • Registration should proceed when clicking "Proceed Anyway"<br>
+                        • No errors should occur during the process
+                    </div>
+                </div>
+            `;
+        }
+
+        // Auto-run authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚨 Cross-Competition Warning System Test initialized');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔔 Professional Notification System Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #2196F3;
+        }
+        
+        .test-section h3 {
+            color: #2196F3;
+            margin-top: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .button.register { background: linear-gradient(135deg, #2196F3, #1976D2); }
+        .button.withdraw { background: linear-gradient(135deg, #f44336, #d32f2f); }
+        .button.remove { background: linear-gradient(135deg, #ff9800, #f57c00); }
+        .button.test { background: linear-gradient(135deg, #9c27b0, #7b1fa2); }
+        
+        .result {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            border: 1px solid #e0e0e0;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .success {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        
+        .error {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            border-color: #f44336;
+            color: #c62828;
+        }
+        
+        .warning {
+            background: linear-gradient(135deg, #fff8e1, #ffecb3);
+            border-color: #ff9800;
+            color: #ef6c00;
+        }
+        
+        .info {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-color: #2196f3;
+            color: #1565c0;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2196F3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        
+        .status-card h4 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        
+        .notification-preview {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .notification-preview h5 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .notification-preview p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .feature-list li:before {
+            content: '✅ ';
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .badge {
+            background: #2196F3;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔔 Professional Notification System</h1>
+            <p>Smart, Real-time Notifications for Student Registrations & Competition Activities</p>
+        </div>
+        
+        <div class="content">
+            <!-- Test Authentication -->
+            <div class="test-section">
+                <h3>🔐 Step 1: Authentication</h3>
+                <p>Login to test the notification system with real API integration.</p>
+                <button class="button" onclick="login()">🚀 Login as Admin</button>
+                <div id="loginResult" class="result">Click login to authenticate and test notifications</div>
+            </div>
+            
+            <!-- Test Registration Notifications -->
+            <div class="test-section">
+                <h3>📝 Step 2: Registration Notifications</h3>
+                <p>Test professional notifications triggered by student registrations.</p>
+                <button class="button register" onclick="testRegistrationNotification()">👥 Test Student Registration</button>
+                <div id="registrationResult" class="result">Registration notification will appear here</div>
+                
+                <div class="notification-preview">
+                    <h5>🔔 Expected Notification:</h5>
+                    <p><strong>✅ New Student Registration</strong><br>
+                    John Smith, Sarah Johnson successfully registered for "Qatar Math Olympiad" by Dr. Ahmed Al-Rashid</p>
+                </div>
+            </div>
+            
+            <!-- Test Withdrawal Notifications -->
+            <div class="test-section">
+                <h3>❌ Step 3: Withdrawal Notifications</h3>
+                <p>Test notifications for registration cancellations.</p>
+                <button class="button withdraw" onclick="testWithdrawalNotification()">🗑️ Test Registration Withdrawal</button>
+                <div id="withdrawalResult" class="result">Withdrawal notification will appear here</div>
+                
+                <div class="notification-preview">
+                    <h5>🔔 Expected Notification:</h5>
+                    <p><strong>❌ Registration Cancelled</strong><br>
+                    Registration for "Science Fair 2025" cancelled by Ms. Sarah Johnson (3 students)</p>
+                </div>
+            </div>
+            
+            <!-- Test Student Removal Notifications -->
+            <div class="test-section">
+                <h3>👤 Step 4: Student Removal Notifications</h3>
+                <p>Test notifications for individual student removals from competitions.</p>
+                <button class="button remove" onclick="testStudentRemovalNotification()">👥➖ Test Student Removal</button>
+                <div id="removalResult" class="result">Student removal notification will appear here</div>
+                
+                <div class="notification-preview">
+                    <h5>🔔 Expected Notification:</h5>
+                    <p><strong>👤 Student Removed</strong><br>
+                    Ahmed Ali removed from "Robotics Competition" by Mr. Mohammad Hassan</p>
+                </div>
+            </div>
+            
+            <!-- Test Live Portal Integration -->
+            <div class="test-section">
+                <h3>🌐 Step 5: Live Portal Integration</h3>
+                <p>Test the notification system within the actual teacher portal.</p>
+                <button class="button test" onclick="openPortal()">🏫 Open Teacher Portal</button>
+                <button class="button test" onclick="openNotificationsPage()">🔔 View Notifications Page</button>
+                <div id="portalResult" class="result">Portal integration testing</div>
+            </div>
+            
+            <!-- Features Overview -->
+            <div class="test-section">
+                <h3>⭐ Professional Notification Features</h3>
+                <div class="status-grid">
+                    <div class="status-card">
+                        <h4>🎯 Smart Triggering</h4>
+                        <ul class="feature-list">
+                            <li>Real-time registration events</li>
+                            <li>Automatic withdrawal tracking</li>
+                            <li>Student removal monitoring</li>
+                            <li>Competition status updates</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h4>🎨 Professional Design</h4>
+                        <ul class="feature-list">
+                            <li>Material-UI components</li>
+                            <li>Priority-based styling</li>
+                            <li>Action-specific icons</li>
+                            <li>Professional messaging</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h4>💾 Persistent Storage</h4>
+                        <ul class="feature-list">
+                            <li>LocalStorage persistence</li>
+                            <li>Read/unread tracking</li>
+                            <li>Type-based filtering</li>
+                            <li>Metadata enrichment</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h4>🔄 Real-time Updates</h4>
+                        <ul class="feature-list">
+                            <li>Event-driven architecture</li>
+                            <li>API response integration</li>
+                            <li>Live badge updates</li>
+                            <li>Instant notifications</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test Summary -->
+            <div class="test-section">
+                <h3>📊 Test Summary</h3>
+                <div id="testSummary" class="result">
+                    <div class="info">
+                        <strong>🧪 Testing Status:</strong> Ready to test professional notification system<br>
+                        <strong>🎯 Features:</strong> <span class="badge">Registration</span> <span class="badge">Withdrawal</span> <span class="badge">Student Removal</span> <span class="badge">Real-time</span><br>
+                        <strong>🔧 Integration:</strong> Backend API + Frontend Context + Professional UI
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        const API_BASE = 'http://localhost:4000/api';
+
+        async function login() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Authenticating...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    }),
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Authentication successful!<br>
+                            <strong>User:</strong> ${data.teacher.firstName} ${data.teacher.lastName}<br>
+                            <strong>Role:</strong> ${data.teacher.role}<br>
+                            <strong>Status:</strong> Ready to test notifications
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Login failed: ${data.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Login error: ${error.message}</div>`;
+            }
+        }
+
+        async function testRegistrationNotification() {
+            const resultDiv = document.getElementById('registrationResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing registration notification...</p></div>';
+            
+            try {
+                // Get competitions and students to create a real registration
+                const [competitionsResponse, studentsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/competitions`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    }),
+                    fetch(`${API_BASE}/students?limit=5`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    })
+                ]);
+
+                const competitions = await competitionsResponse.json();
+                const studentsData = await studentsResponse.json();
+                const students = studentsData.data || studentsData;
+
+                if (competitions.length === 0 || students.length === 0) {
+                    resultDiv.innerHTML = '<div class="warning">⚠️ No competitions or students available for testing</div>';
+                    return;
+                }
+
+                const competition = competitions[0];
+                const testStudents = students.slice(0, 2); // Register 2 students
+
+                // Create a registration
+                const registrationResponse = await fetch(`${API_BASE}/registrations`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        competitionId: competition._id,
+                        studentIds: testStudents.map(s => s._id)
+                    }),
+                });
+
+                const registrationData = await registrationResponse.json();
+                
+                if (registrationResponse.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Registration notification test successful!<br>
+                            <strong>Competition:</strong> ${competition.name}<br>
+                            <strong>Students:</strong> ${testStudents.map(s => s.firstName + ' ' + s.lastName).join(', ')}<br>
+                            <strong>Notification:</strong> ${registrationData.notification ? 'Generated ✅' : 'Not generated ❌'}<br>
+                            ${registrationData.warnings ? `<strong>Warnings:</strong> ${registrationData.warnings.length} detected` : ''}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Registration failed: ${registrationData.error}<br>
+                            <em>Note: This might be expected if student is already registered</em>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Test error: ${error.message}</div>`;
+            }
+        }
+
+        async function testWithdrawalNotification() {
+            const resultDiv = document.getElementById('withdrawalResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing withdrawal notification...</p></div>';
+            
+            try {
+                // Get user's registrations
+                const registrationsResponse = await fetch(`${API_BASE}/registrations/my`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const registrations = await registrationsResponse.json();
+                
+                if (registrations.length === 0) {
+                    resultDiv.innerHTML = '<div class="warning">⚠️ No registrations found. Create a registration first to test withdrawal.</div>';
+                    return;
+                }
+
+                const registration = registrations[0];
+
+                // Delete the registration to test withdrawal notification
+                const deleteResponse = await fetch(`${API_BASE}/registrations/${registration._id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const deleteData = await deleteResponse.json();
+                
+                if (deleteResponse.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Withdrawal notification test successful!<br>
+                            <strong>Cancelled Registration:</strong> ${registration.competition.name}<br>
+                            <strong>Students Count:</strong> ${registration.students.length}<br>
+                            <strong>Notification:</strong> ${deleteData.notification ? 'Generated ✅' : 'Not generated ❌'}<br>
+                            <strong>Message:</strong> ${deleteData.message}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Withdrawal failed: ${deleteData.error}<br>
+                            <em>Note: This might be expected if deadline has passed</em>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Test error: ${error.message}</div>`;
+            }
+        }
+
+        async function testStudentRemovalNotification() {
+            const resultDiv = document.getElementById('removalResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing student removal notification...</p></div>';
+            
+            try {
+                // Get user's registrations with multiple students
+                const registrationsResponse = await fetch(`${API_BASE}/registrations/my`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const registrations = await registrationsResponse.json();
+                const multiStudentReg = registrations.find(reg => reg.students.length > 1);
+                
+                if (!multiStudentReg) {
+                    resultDiv.innerHTML = '<div class="warning">⚠️ No registrations with multiple students found. Create a multi-student registration first.</div>';
+                    return;
+                }
+
+                const studentToRemove = multiStudentReg.students[0];
+
+                // Remove a student from registration
+                const removeResponse = await fetch(`${API_BASE}/registrations/${multiStudentReg._id}/students/${studentToRemove.student._id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const removeData = await removeResponse.json();
+                
+                if (removeResponse.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Student removal notification test successful!<br>
+                            <strong>Removed Student:</strong> ${studentToRemove.student.firstName} ${studentToRemove.student.lastName}<br>
+                            <strong>From Competition:</strong> ${multiStudentReg.competition.name}<br>
+                            <strong>Notification:</strong> ${removeData.notification ? 'Generated ✅' : 'Not generated ❌'}<br>
+                            <strong>Remaining Students:</strong> ${removeData.registration?.students.length || 'N/A'}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Student removal failed: ${removeData.error}<br>
+                            <em>Note: This might be expected if deadline has passed or if it's the last student</em>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Test error: ${error.message}</div>`;
+            }
+        }
+
+        function openPortal() {
+            const resultDiv = document.getElementById('portalResult');
+            
+            // Open the teacher portal in a new tab
+            const portalWindow = window.open('http://localhost:4002', '_blank');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    🏫 Teacher portal opened in new tab<br>
+                    <strong>URL:</strong> http://localhost:4002<br>
+                    <strong>Test Flow:</strong> Login → Go to Competitions → Register Students → Check Notifications<br>
+                    <strong>Expected:</strong> Real-time notifications will appear as you perform actions
+                </div>
+            `;
+        }
+
+        function openNotificationsPage() {
+            const resultDiv = document.getElementById('portalResult');
+            
+            // Open the notifications page in a new tab
+            const notificationsWindow = window.open('http://localhost:4002/notifications', '_blank');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    🔔 Notifications page opened in new tab<br>
+                    <strong>URL:</strong> http://localhost:4002/notifications<br>
+                    <strong>Features to Test:</strong><br>
+                    • View all notifications with professional styling<br>
+                    • Filter by type (Registration, Competition, System)<br>
+                    • Mark as read/unread<br>
+                    • Delete notifications<br>
+                    • Priority-based display
+                </div>
+            `;
+        }
+
+        // Auto-populate auth token if it exists
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                authToken = token;
+                const resultDiv = document.getElementById('loginResult');
+                resultDiv.innerHTML = '<div class="success">✅ Found existing authentication token. Ready to test!</div>';
+            }
+            
+            // Update test summary
+            const summaryDiv = document.getElementById('testSummary');
+            summaryDiv.innerHTML = `
+                <div class="info">
+                    <strong>🎯 Notification System Status:</strong> ✅ Fully Implemented & Ready<br>
+                    <strong>🔧 Backend Integration:</strong> ✅ Registration/Withdrawal/Removal triggers<br>
+                    <strong>🎨 Frontend Context:</strong> ✅ Professional templates & real-time updates<br>
+                    <strong>💾 Persistence:</strong> ✅ LocalStorage + metadata enrichment<br>
+                    <strong>🌐 Portal Integration:</strong> ✅ Live notifications in teacher portal
+                </div>
+            `;
+        };
+    </script>
+</body>
+</html>

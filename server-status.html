@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Status Check</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #4CAF50;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid #f44336;
+        }
+        .loading {
+            background: rgba(255, 193, 7, 0.3);
+            border: 1px solid #ff9800;
+        }
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        .green { background: #4CAF50; }
+        .red { background: #f44336; }
+        .yellow { background: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Server Status Dashboard</h1>
+        <p>Quick status check for the Qatar Science & Technology Secondary School portal</p>
+
+        <div class="status-card">
+            <h2>🖥️ Server Status</h2>
+            <button class="btn" onclick="checkServers()">Check Server Status</button>
+            
+            <div id="frontend-status" class="status loading">
+                <span>Frontend (React) - Port 3000</span>
+                <div class="indicator yellow"></div>
+            </div>
+            
+            <div id="backend-status" class="status loading">
+                <span>Backend (Node.js) - Port 4000</span>
+                <div class="indicator yellow"></div>
+            </div>
+            
+            <div id="database-status" class="status loading">
+                <span>Database Connection</span>
+                <div class="indicator yellow"></div>
+            </div>
+        </div>
+
+        <div class="status-card">
+            <h2>🔧 Quick Actions</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <button class="btn" onclick="openApplication()">Open Application</button>
+                <button class="btn" onclick="testLogin()">Test Login</button>
+                <button class="btn" onclick="testCompetitions()">Test Competitions</button>
+                <button class="btn" onclick="testStudents()">Test Students</button>
+            </div>
+        </div>
+
+        <div class="status-card">
+            <h2>📊 System Information</h2>
+            <div id="system-info">
+                <p><strong>Frontend URL:</strong> <a href="http://localhost:3000" target="_blank" style="color: #4CAF50;">http://localhost:3000</a></p>
+                <p><strong>Backend API:</strong> <a href="http://localhost:4000/api" target="_blank" style="color: #4CAF50;">http://localhost:4000/api</a></p>
+                <p><strong>Admin Login:</strong> admin@qstss.edu.qa / admin123</p>
+                <p><strong>Teacher Login:</strong> john.doe@qstss.edu.qa / teacher123</p>
+                <p><strong>Status:</strong> <span id="overall-status">Checking...</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkServers() {
+            // Check Frontend
+            try {
+                const frontendResponse = await fetch('http://localhost:3000');
+                if (frontendResponse.ok || frontendResponse.status === 200) {
+                    updateStatus('frontend-status', true, 'Frontend (React) - Port 3000 ✅');
+                } else {
+                    updateStatus('frontend-status', false, 'Frontend - Connection issues');
+                }
+            } catch (error) {
+                updateStatus('frontend-status', false, 'Frontend - Not responding');
+            }
+
+            // Check Backend
+            try {
+                const backendResponse = await fetch('http://localhost:4000/api/auth/check');
+                updateStatus('backend-status', true, 'Backend (Node.js) - Port 4000 ✅');
+            } catch (error) {
+                try {
+                    // Try a basic health check
+                    const healthResponse = await fetch('http://localhost:4000');
+                    updateStatus('backend-status', true, 'Backend - Running but API might be different');
+                } catch (error2) {
+                    updateStatus('backend-status', false, 'Backend - Not responding');
+                }
+            }
+
+            // Check Database (via backend)
+            try {
+                const dbResponse = await fetch('http://localhost:4000/api/students?limit=1');
+                if (dbResponse.ok) {
+                    updateStatus('database-status', true, 'Database Connection ✅');
+                } else {
+                    updateStatus('database-status', false, 'Database - Connection issues');
+                }
+            } catch (error) {
+                updateStatus('database-status', false, 'Database - Cannot verify');
+            }
+
+            updateOverallStatus();
+        }
+
+        function updateStatus(elementId, isSuccess, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${isSuccess ? 'success' : 'error'}`;
+            element.innerHTML = `
+                <span>${text}</span>
+                <div class="indicator ${isSuccess ? 'green' : 'red'}"></div>
+            `;
+        }
+
+        function updateOverallStatus() {
+            const statusElements = document.querySelectorAll('.status');
+            const successCount = document.querySelectorAll('.status.success').length;
+            const totalCount = statusElements.length;
+            
+            const statusSpan = document.getElementById('overall-status');
+            if (successCount === totalCount) {
+                statusSpan.innerHTML = '<span style="color: #4CAF50;">🟢 All systems operational</span>';
+            } else if (successCount > 0) {
+                statusSpan.innerHTML = '<span style="color: #ff9800;">🟡 Partial functionality</span>';
+            } else {
+                statusSpan.innerHTML = '<span style="color: #f44336;">🔴 Systems down</span>';
+            }
+        }
+
+        function openApplication() {
+            window.open('http://localhost:3000', '_blank');
+        }
+
+        function testLogin() {
+            window.open('http://localhost:3000/login', '_blank');
+        }
+
+        function testCompetitions() {
+            window.open('http://localhost:3000/competitions', '_blank');
+        }
+
+        function testStudents() {
+            window.open('http://localhost:3000/students', '_blank');
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', function() {
+            setTimeout(checkServers, 1000);
+        });
+    </script>
+</body>
+</html>

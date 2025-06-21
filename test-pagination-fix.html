@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competition Pagination Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .loading {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ff9800;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .test-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        .data-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .summary {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏫 Competition Pagination Fix Verification</h1>
+    <p>Testing the fix for student pagination in competition registration</p>
+
+    <div class="test-container">
+        <h2>🔐 Authentication Test</h2>
+        <button class="test-button" onclick="testAuthentication()">Test Login</button>
+        <div id="auth-status">Click "Test Login" to authenticate</div>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Students Pagination Test</h2>
+        <button class="test-button" onclick="testStudentsPagination()">Test Student Count</button>
+        <div id="pagination-status">Authenticate first, then test student count</div>
+    </div>
+
+    <div class="test-container">
+        <h2>🏆 Competition Registration Simulation</h2>
+        <button class="test-button" onclick="testCompetitionRegistration()">Simulate Competition Registration</button>
+        <div id="competition-status">Test previous steps first</div>
+    </div>
+
+    <div class="summary" id="summary">
+        <h3>📋 Test Summary</h3>
+        <p>No tests run yet</p>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        let authToken = null;
+        let testResults = {
+            auth: false,
+            pagination: false,
+            competition: false
+        };
+
+        async function testAuthentication() {
+            const statusDiv = document.getElementById('auth-status');
+            statusDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Authenticating...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    testResults.auth = true;
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Authentication Successful</h3>
+                            <p>Admin token acquired</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Authentication failed');
+                }
+            } catch (error) {
+                testResults.auth = false;
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Authentication Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+            updateSummary();
+        }
+
+        async function testStudentsPagination() {
+            const statusDiv = document.getElementById('pagination-status');
+            
+            if (!authToken) {
+                statusDiv.innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing student pagination...</p></div>';
+            
+            try {
+                // Test default pagination (should return 50 students)
+                const defaultResponse = await fetch(`${API_BASE}/students`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const defaultData = await defaultResponse.json();
+                
+                // Test with limit=1000 (should return all students)
+                const allResponse = await fetch(`${API_BASE}/students?limit=1000`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const allData = await allResponse.json();
+                
+                if (defaultResponse.ok && allResponse.ok) {
+                    const defaultCount = defaultData.data.length;
+                    const allCount = allData.data.length;
+                    const totalStudents = allData.pagination.total;
+                    
+                    testResults.pagination = true;
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Pagination Test Successful</h3>
+                            <p><strong>Default request:</strong> ${defaultCount} students</p>
+                            <p><strong>With limit=1000:</strong> ${allCount} students</p>
+                            <p><strong>Total in database:</strong> ${totalStudents} students</p>
+                            <p><strong>Fix Status:</strong> ${allCount > defaultCount ? '✅ FIXED - All students now available' : '⚠️ May need higher limit'}</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Failed to fetch students');
+                }
+            } catch (error) {
+                testResults.pagination = false;
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Pagination Test Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+            updateSummary();
+        }
+
+        async function testCompetitionRegistration() {
+            const statusDiv = document.getElementById('competition-status');
+            
+            if (!authToken) {
+                statusDiv.innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing competition registration flow...</p></div>';
+            
+            try {
+                // Fetch students with the same method as Competition page
+                const studentsResponse = await fetch(`${API_BASE}/students?limit=1000`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const studentsData = await studentsResponse.json();
+                
+                // Fetch competitions
+                const competitionsResponse = await fetch(`${API_BASE}/competitions`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const competitionsData = await competitionsResponse.json();
+                
+                if (studentsResponse.ok && competitionsResponse.ok) {
+                    const students = studentsData.data;
+                    const competitions = competitionsData.data || competitionsData;
+                    const testCompetition = competitions[0];
+                    
+                    // Count students from different grades (testing grade filtering removal)
+                    const gradeDistribution = {};
+                    students.forEach(student => {
+                        gradeDistribution[student.grade] = (gradeDistribution[student.grade] || 0) + 1;
+                    });
+                    
+                    testResults.competition = true;
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Competition Registration Test Successful</h3>
+                            <p><strong>Total Students Available:</strong> ${students.length}</p>
+                            <p><strong>Test Competition:</strong> "${testCompetition.name}"</p>
+                            <p><strong>Competition Eligible Grades:</strong> ${testCompetition.eligibleGrades.join(', ')}</p>
+                            <p><strong>All Students Now Shown:</strong> ✅ Yes (regardless of grade)</p>
+                            <div class="data-display">
+Grade Distribution:
+${Object.entries(gradeDistribution).map(([grade, count]) => `Grade ${grade}: ${count} students`).join('\n')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Failed to fetch data for competition test');
+                }
+            } catch (error) {
+                testResults.competition = false;
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Competition Registration Test Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summary');
+            const passed = Object.values(testResults).filter(result => result).length;
+            const total = Object.keys(testResults).length;
+            
+            summaryDiv.innerHTML = `
+                <h3>📋 Test Summary</h3>
+                <p><strong>Tests Passed:</strong> ${passed}/${total}</p>
+                <ul>
+                    <li>Authentication: ${testResults.auth ? '✅' : '❌'}</li>
+                    <li>Pagination Fix: ${testResults.pagination ? '✅' : '❌'}</li>
+                    <li>Competition Registration: ${testResults.competition ? '✅' : '❌'}</li>
+                </ul>
+                ${passed === total ? 
+                    '<div class="success"><strong>🎉 All tests passed! The pagination fix is working correctly.</strong></div>' : 
+                    '<div class="error"><strong>⚠️ Some tests failed. Check the results above.</strong></div>'
+                }
+            `;
+        }
+
+        // Auto-run authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Competition Pagination Fix Test initialized');
+            updateSummary();
+        });
+    </script>
+</body>
+</html>

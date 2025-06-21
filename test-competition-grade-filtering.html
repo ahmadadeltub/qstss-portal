@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competition Grade Filtering Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #4CAF50;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid #f44336;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .loading {
+            background: rgba(33, 150, 243, 0.3);
+            border: 1px solid #2196F3;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .test-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            margin: 10px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        .test-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .competition-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        .student-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .student-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #4CAF50;
+        }
+        .filter-summary {
+            background: rgba(33, 150, 243, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 Competition Grade Filtering Test</h1>
+        <p>Testing that competition registration only shows students eligible for specific competition grades.</p>
+        
+        <div class="test-section">
+            <h2>🔐 Authentication</h2>
+            <button class="test-button" onclick="authenticate()">🔑 Login as Admin</button>
+            <div id="auth-status">Click login to authenticate</div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Load Test Data</h2>
+            <button class="test-button" onclick="loadCompetitions()">🏆 Load Competitions</button>
+            <button class="test-button" onclick="loadStudents()">👥 Load Students</button>
+            <div id="data-status">Load competitions and students to begin testing</div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Grade Filtering Tests</h2>
+            <div id="competitions-list">Load competitions first</div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Test Results Summary</h2>
+            <div id="test-summary">Run tests to see results</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        let authToken = null;
+        let competitions = [];
+        let students = [];
+        let testResults = {};
+
+        async function authenticate() {
+            const statusDiv = document.getElementById('auth-status');
+            statusDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Authenticating...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Authentication Successful</h3>
+                            <p><strong>User:</strong> ${data.teacher.firstName} ${data.teacher.lastName}</p>
+                            <p><strong>Role:</strong> ${data.teacher.role}</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Authentication failed');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Authentication Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadCompetitions() {
+            if (!authToken) {
+                document.getElementById('data-status').innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+
+            const statusDiv = document.getElementById('data-status');
+            statusDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading competitions...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/competitions`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.data) {
+                    competitions = data.data;
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Competitions Loaded</h3>
+                            <p><strong>Found:</strong> ${competitions.length} competitions</p>
+                        </div>
+                    `;
+                    updateCompetitionsList();
+                } else {
+                    throw new Error('Failed to load competitions');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Failed to Load Competitions</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadStudents() {
+            if (!authToken) {
+                document.getElementById('data-status').innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+
+            const statusDiv = document.getElementById('data-status');
+            statusDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading students...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/students?limit=300`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.data) {
+                    students = data.data;
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Students Loaded</h3>
+                            <p><strong>Found:</strong> ${students.length} students</p>
+                            <p><strong>Grades:</strong> ${[...new Set(students.map(s => s.grade))].sort().join(', ')}</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Failed to load students');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Failed to Load Students</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateCompetitionsList() {
+            const listDiv = document.getElementById('competitions-list');
+            
+            if (competitions.length === 0) {
+                listDiv.innerHTML = '<p>No competitions loaded</p>';
+                return;
+            }
+
+            let html = '<h3>🏆 Available Competitions</h3>';
+            competitions.forEach((comp, index) => {
+                html += `
+                    <div class="competition-item">
+                        <h4>${comp.name}</h4>
+                        <p><strong>Category:</strong> ${comp.category}</p>
+                        <p><strong>Eligible Grades:</strong> ${comp.eligibleGrades.join(', ')}</p>
+                        <p><strong>Max Students per Teacher:</strong> ${comp.maxStudentsPerTeacher}</p>
+                        <button class="test-button" onclick="testCompetitionFiltering(${index})">
+                            🧪 Test Grade Filtering
+                        </button>
+                    </div>
+                `;
+            });
+            
+            listDiv.innerHTML = html;
+        }
+
+        async function testCompetitionFiltering(competitionIndex) {
+            const competition = competitions[competitionIndex];
+            const testDiv = document.createElement('div');
+            testDiv.id = `test-result-${competitionIndex}`;
+            
+            // Find the competition item and add results after it
+            const competitionItems = document.querySelectorAll('.competition-item');
+            const competitionItem = competitionItems[competitionIndex];
+            
+            testDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing grade filtering...</p></div>';
+            
+            // Insert after the competition item
+            competitionItem.parentNode.insertBefore(testDiv, competitionItem.nextSibling);
+            
+            try {
+                // Filter students by eligible grades (same logic as the app)
+                const eligibleStudents = students.filter(student => 
+                    competition.eligibleGrades.includes(student.grade)
+                );
+                
+                // Sort students by grade (same logic as the app)
+                const sortedEligible = eligibleStudents.sort((a, b) => {
+                    const gradeOrder = ['9', '10', '11-Engineering', '11-IT', '11-Medical', '12-Engineering', '12-IT', '12-Medical'];
+                    const gradeA = gradeOrder.indexOf(a.grade);
+                    const gradeB = gradeOrder.indexOf(b.grade);
+                    
+                    if (gradeA !== gradeB) {
+                        return gradeA - gradeB;
+                    }
+                    
+                    const lastNameCompare = a.lastName.localeCompare(b.lastName);
+                    if (lastNameCompare !== 0) {
+                        return lastNameCompare;
+                    }
+                    
+                    return a.firstName.localeCompare(b.firstName);
+                });
+                
+                // Group by grade for analysis
+                const studentsByGrade = {};
+                sortedEligible.forEach(student => {
+                    if (!studentsByGrade[student.grade]) {
+                        studentsByGrade[student.grade] = [];
+                    }
+                    studentsByGrade[student.grade].push(student);
+                });
+                
+                // Check that only eligible grades are present
+                const foundGrades = Object.keys(studentsByGrade);
+                const unexpectedGrades = foundGrades.filter(grade => !competition.eligibleGrades.includes(grade));
+                const missingGrades = competition.eligibleGrades.filter(grade => !foundGrades.includes(grade));
+                
+                let resultHtml = '';
+                
+                if (unexpectedGrades.length === 0) {
+                    resultHtml += `
+                        <div class="success">
+                            <h4>✅ Grade Filtering: PASSED</h4>
+                            <p><strong>Competition:</strong> "${competition.name}"</p>
+                            <p><strong>Expected Grades:</strong> ${competition.eligibleGrades.join(', ')}</p>
+                            <p><strong>Found Grades:</strong> ${foundGrades.join(', ')}</p>
+                            <p><strong>Total Eligible Students:</strong> ${sortedEligible.length}</p>
+                        </div>
+                    `;
+                } else {
+                    resultHtml += `
+                        <div class="error">
+                            <h4>❌ Grade Filtering: FAILED</h4>
+                            <p><strong>Unexpected Grades Found:</strong> ${unexpectedGrades.join(', ')}</p>
+                        </div>
+                    `;
+                }
+                
+                if (missingGrades.length > 0) {
+                    resultHtml += `
+                        <div class="filter-summary">
+                            <p><strong>Note:</strong> No students found for grades: ${missingGrades.join(', ')}</p>
+                        </div>
+                    `;
+                }
+                
+                // Show grade breakdown
+                resultHtml += '<div class="filter-summary"><h5>📊 Grade Breakdown:</h5>';
+                foundGrades.forEach(grade => {
+                    const count = studentsByGrade[grade].length;
+                    const sampleStudents = studentsByGrade[grade].slice(0, 3);
+                    resultHtml += `
+                        <p><strong>Grade ${grade}:</strong> ${count} students</p>
+                        <div class="student-list">
+                            ${sampleStudents.map(s => `
+                                <div class="student-item">
+                                    ${s.firstName} ${s.lastName} (${s.studentId}) - Class ${s.class}
+                                </div>
+                            `).join('')}
+                            ${count > 3 ? `<div class="student-item">... and ${count - 3} more students</div>` : ''}
+                        </div>
+                    `;
+                });
+                resultHtml += '</div>';
+                
+                testDiv.innerHTML = resultHtml;
+                
+                // Store test result
+                testResults[competition._id] = {
+                    competition: competition.name,
+                    passed: unexpectedGrades.length === 0,
+                    eligibleStudents: sortedEligible.length,
+                    gradesFound: foundGrades,
+                    unexpectedGrades: unexpectedGrades
+                };
+                
+                updateTestSummary();
+                
+            } catch (error) {
+                testDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Test Failed</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateTestSummary() {
+            const summaryDiv = document.getElementById('test-summary');
+            const testCount = Object.keys(testResults).length;
+            const passedCount = Object.values(testResults).filter(result => result.passed).length;
+            
+            if (testCount === 0) {
+                summaryDiv.innerHTML = '<p>No tests run yet</p>';
+                return;
+            }
+            
+            let html = `
+                <div class="${passedCount === testCount ? 'success' : 'error'}">
+                    <h3>📊 Test Summary</h3>
+                    <p><strong>Tests Run:</strong> ${testCount}</p>
+                    <p><strong>Passed:</strong> ${passedCount}</p>
+                    <p><strong>Failed:</strong> ${testCount - passedCount}</p>
+                    <p><strong>Success Rate:</strong> ${Math.round((passedCount / testCount) * 100)}%</p>
+                </div>
+            `;
+            
+            Object.values(testResults).forEach(result => {
+                html += `
+                    <div class="filter-summary">
+                        <p><strong>${result.competition}:</strong> 
+                        ${result.passed ? '✅ PASSED' : '❌ FAILED'} 
+                        (${result.eligibleStudents} eligible students)</p>
+                        ${result.unexpectedGrades.length > 0 ? 
+                            `<p style="color: #f44336;">Unexpected grades: ${result.unexpectedGrades.join(', ')}</p>` : ''}
+                    </div>
+                `;
+            });
+            
+            summaryDiv.innerHTML = html;
+        }
+
+        // Auto-initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Competition Grade Filtering Test initialized');
+        });
+    </script>
+</body>
+</html>

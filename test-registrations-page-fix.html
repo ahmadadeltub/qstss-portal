@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Registrations Page Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #cce7ff; border-color: #99d6ff; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .endpoint-box {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .fix-summary {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Registrations Page Fix Verification</h1>
+        
+        <div class="fix-summary">
+            <h3>📋 Issues Fixed:</h3>
+            <ul>
+                <li><strong>API Route Mismatch:</strong> Frontend was calling <code>/api/registrations/my</code> but backend expects <code>/registrations/my</code></li>
+                <li><strong>API Service Method:</strong> <code>getMyRegistrations()</code> was calling wrong endpoint <code>/registrations/my-registrations</code></li>
+                <li><strong>Delete Endpoint:</strong> Direct API call instead of using <code>apiService.deleteRegistration()</code></li>
+                <li><strong>Authentication Issue:</strong> Delete route was using <code>req.teacher.teacherId</code> instead of <code>req.teacher._id</code></li>
+                <li><strong>Missing Middleware:</strong> Delete route was missing <code>authenticateToken</code> middleware</li>
+            </ul>
+        </div>
+
+        <div class="step info">
+            <h3>🎯 Test Objective</h3>
+            <p>Verify that the "Failed to load registrations" error is fixed and the MyRegistrations page loads correctly.</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Login to System</h3>
+            <button onclick="login()">🔐 Login as Admin</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Test My Registrations API Endpoint</h3>
+            <div class="endpoint-box">
+                <strong>Fixed Endpoint:</strong> <code>GET /api/registrations/my</code><br>
+                <strong>Expected:</strong> Array of registrations for the logged-in teacher
+            </div>
+            <button onclick="testMyRegistrationsAPI()">🔍 Test API Endpoint</button>
+            <div id="apiResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Test Frontend MyRegistrations Page</h3>
+            <p>Open the MyRegistrations page to verify it loads without the "Failed to load registrations" error.</p>
+            <button onclick="openMyRegistrationsPage()">📄 Open MyRegistrations Page</button>
+            <div id="pageResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Test Registration Deletion (if any exist)</h3>
+            <p>Test the delete functionality to ensure the fixed API routes work correctly.</p>
+            <button onclick="testDeleteFunctionality()">🗑️ Test Delete (Check Console)</button>
+            <div id="deleteResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Create Test Registration</h3>
+            <p>Create a test registration to verify the complete workflow works.</p>
+            <button onclick="openCompetitionsPage()">🏆 Open Competitions Page</button>
+            <div id="competitionResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 6: Verification Summary</h3>
+            <button onclick="summarizeResults()">📊 Generate Summary</button>
+            <div id="summaryResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function login() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '⏳ Logging in...';
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    }),
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    resultDiv.innerHTML = `<div class="success">✅ Login successful! Token: ${authToken.substring(0, 20)}...</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Login failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Login error: ${error.message}</div>`;
+            }
+        }
+
+        async function testMyRegistrationsAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '⏳ Testing API endpoint...';
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/registrations/my', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ API endpoint working correctly!<br>
+                            <strong>Status:</strong> ${response.status}<br>
+                            <strong>Registrations found:</strong> ${Array.isArray(data) ? data.length : 'N/A'}<br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ API failed: ${data.error || data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ API error: ${error.message}</div>`;
+            }
+        }
+
+        function openMyRegistrationsPage() {
+            const resultDiv = document.getElementById('pageResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            // Open in new tab
+            const newWindow = window.open('http://localhost:3000/registrations', '_blank');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    📄 MyRegistrations page opened in new tab.<br>
+                    <strong>Instructions:</strong><br>
+                    1. Check if the page loads without "Failed to load registrations" error<br>
+                    2. Verify that any existing registrations are displayed<br>
+                    3. Check browser console for any errors<br>
+                    4. Close the tab and report results here
+                </div>
+            `;
+        }
+
+        function testDeleteFunctionality() {
+            const resultDiv = document.getElementById('deleteResult');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    🗑️ Delete functionality test:<br>
+                    <strong>Instructions:</strong><br>
+                    1. If you have any registrations, try to delete one<br>
+                    2. Check the browser console for any errors<br>
+                    3. Verify the delete request goes to the correct endpoint<br>
+                    4. The fixed endpoint should be: <code>DELETE /api/registrations/:id</code><br>
+                    <br>
+                    <strong>Console commands to test:</strong><br>
+                    <pre>// Check network tab in DevTools for DELETE requests
+// Should see: DELETE http://localhost:4000/api/registrations/[id]</pre>
+                </div>
+            `;
+        }
+
+        function openCompetitionsPage() {
+            const resultDiv = document.getElementById('competitionResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            // Open in new tab
+            const newWindow = window.open('http://localhost:3000/competitions', '_blank');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    🏆 Competitions page opened in new tab.<br>
+                    <strong>Test Complete Registration Flow:</strong><br>
+                    1. Select a competition and click "Register Students"<br>
+                    2. Verify all 242 students are visible in the dropdown (pagination fix)<br>
+                    3. Select some students and submit registration<br>
+                    4. Go back to MyRegistrations page to verify it appears<br>
+                    5. Test deleting the registration
+                </div>
+            `;
+        }
+
+        function summarizeResults() {
+            const resultDiv = document.getElementById('summaryResult');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    <h4>🏁 Fix Verification Summary</h4>
+                    
+                    <h5>✅ Fixes Applied:</h5>
+                    <ul>
+                        <li><strong>Frontend API Call:</strong> Changed from <code>apiService.get('/api/registrations/my')</code> to <code>apiService.getMyRegistrations()</code></li>
+                        <li><strong>API Service Method:</strong> Fixed <code>getMyRegistrations()</code> to call <code>/registrations/my</code> instead of <code>/registrations/my-registrations</code></li>
+                        <li><strong>Delete Method:</strong> Changed from <code>apiService.delete()</code> to <code>apiService.deleteRegistration()</code></li>
+                        <li><strong>Backend Auth Fix:</strong> Changed <code>req.teacher.teacherId</code> to <code>req.teacher._id</code> in delete route</li>
+                        <li><strong>Middleware Fix:</strong> Added <code>authenticateToken</code> to delete route</li>
+                        <li><strong>Registration Fix:</strong> Fixed <code>registerStudents()</code> to call <code>/registrations</code> instead of <code>/registrations/register</code></li>
+                    </ul>
+
+                    <h5>🎯 Expected Results:</h5>
+                    <ul>
+                        <li>MyRegistrations page should load without "Failed to load registrations" error</li>
+                        <li>Existing registrations should display correctly</li>
+                        <li>Delete functionality should work properly</li>
+                        <li>New registrations should work and appear on MyRegistrations page</li>
+                        <li>All API calls should use correct endpoints and authentication</li>
+                    </ul>
+
+                    <h5>🔍 Manual Testing Required:</h5>
+                    <ol>
+                        <li>Login to the portal at <a href="http://localhost:3000/login" target="_blank">http://localhost:3000/login</a></li>
+                        <li>Navigate to MyRegistrations page</li>
+                        <li>Verify no "Failed to load registrations" error</li>
+                        <li>Create a test registration via Competitions page</li>
+                        <li>Return to MyRegistrations and verify it appears</li>
+                        <li>Test deleting the registration</li>
+                    </ol>
+
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                        <strong>🎉 COMPLETION STATUS:</strong><br>
+                        The "Failed to load registrations" error should now be completely resolved!
+                    </div>
+                </div>
+            `;
+        }
+
+        // Auto-populate auth token if it exists
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                authToken = token;
+                const resultDiv = document.getElementById('loginResult');
+                resultDiv.innerHTML = `<div class="success">✅ Found existing token: ${token.substring(0, 20)}...</div>`;
+            }
+        };
+    </script>
+</body>
+</html>

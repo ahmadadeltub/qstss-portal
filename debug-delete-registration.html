@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Delete Registration Error</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #cce7ff; border-color: #99d6ff; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .endpoint-box {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .registration-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Delete Registration Error</h1>
+        
+        <div class="step warning">
+            <h3>⚠️ Error Report</h3>
+            <p><strong>User Issue:</strong> "Failed to cancel registration" error when trying to delete any competition registration.</p>
+            <p><strong>Expected:</strong> Registration should be deleted successfully</p>
+            <p><strong>Actual:</strong> Error message appears</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Login & Get Token</h3>
+            <button onclick="login()">🔐 Login as Admin</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Fetch Existing Registrations</h3>
+            <button onclick="fetchRegistrations()">📋 Get My Registrations</button>
+            <div id="registrationsResult" class="result"></div>
+            <div id="registrationsList"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Test Delete Registration</h3>
+            <p>Select a registration to test deletion (will appear after step 2)</p>
+            <div id="deleteButtons"></div>
+            <div id="deleteResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Debug Analysis</h3>
+            <button onclick="analyzeIssues()">🔍 Analyze Potential Issues</button>
+            <div id="analysisResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Create Test Registration (if none exist)</h3>
+            <button onclick="createTestRegistration()">➕ Create Test Registration</button>
+            <div id="createResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let userRegistrations = [];
+
+        async function login() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '⏳ Logging in...';
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    }),
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Login successful!<br>
+                            <strong>Token:</strong> ${authToken.substring(0, 30)}...<br>
+                            <strong>User:</strong> ${data.teacher.firstName} ${data.teacher.lastName}<br>
+                            <strong>Role:</strong> ${data.teacher.role}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Login failed: ${data.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Login error: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchRegistrations() {
+            const resultDiv = document.getElementById('registrationsResult');
+            const listDiv = document.getElementById('registrationsList');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '⏳ Fetching registrations...';
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/registrations/my', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    userRegistrations = Array.isArray(data) ? data : [];
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Successfully fetched registrations<br>
+                            <strong>Count:</strong> ${userRegistrations.length} registrations found
+                        </div>
+                    `;
+
+                    // Display registrations
+                    if (userRegistrations.length > 0) {
+                        listDiv.innerHTML = userRegistrations.map((reg, index) => `
+                            <div class="registration-card">
+                                <h4>${reg.competition?.name || 'Unknown Competition'}</h4>
+                                <p><strong>ID:</strong> ${reg._id}</p>
+                                <p><strong>Status:</strong> ${reg.status}</p>
+                                <p><strong>Competition Status:</strong> ${reg.competition?.status || 'Unknown'}</p>
+                                <p><strong>Registration Date:</strong> ${new Date(reg.registrationDate).toLocaleDateString()}</p>
+                                <p><strong>Deadline:</strong> ${reg.competition?.registrationDeadline ? new Date(reg.competition.registrationDeadline).toLocaleDateString() : 'Unknown'}</p>
+                                <p><strong>Students:</strong> ${reg.students?.length || 0}</p>
+                                <button onclick="testDeleteRegistration('${reg._id}', '${reg.competition?.name || 'Unknown'}')">
+                                    🗑️ Test Delete This Registration
+                                </button>
+                            </div>
+                        `).join('');
+                    } else {
+                        listDiv.innerHTML = '<div class="info">No registrations found. You may need to create a test registration first.</div>';
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to fetch registrations: ${data.error || data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Fetch error: ${error.message}</div>`;
+            }
+        }
+
+        async function testDeleteRegistration(registrationId, competitionName) {
+            const resultDiv = document.getElementById('deleteResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = `⏳ Attempting to delete registration for "${competitionName}"...`;
+            
+            try {
+                console.log('Deleting registration with ID:', registrationId);
+                console.log('Using token:', authToken.substring(0, 20) + '...');
+                
+                const response = await fetch(`http://localhost:4000/api/registrations/${registrationId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+                
+                console.log('Delete response status:', response.status);
+                console.log('Delete response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Registration deleted successfully!<br>
+                            <strong>Message:</strong> ${data.message}<br>
+                            <strong>Competition:</strong> ${competitionName}
+                        </div>
+                    `;
+                    // Refresh the registrations list
+                    fetchRegistrations();
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Delete failed!<br>
+                            <strong>Status:</strong> ${response.status}<br>
+                            <strong>Error:</strong> ${data.error || data.message}<br>
+                            <strong>Full Response:</strong>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Delete request error: ${error.message}<br>
+                        <strong>Details:</strong> Network or connection error
+                    </div>
+                `;
+                console.error('Delete error:', error);
+            }
+        }
+
+        async function analyzeIssues() {
+            const resultDiv = document.getElementById('analysisResult');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    <h4>🔍 Potential Issues Analysis</h4>
+                    
+                    <h5>1. Authentication Issues:</h5>
+                    <ul>
+                        <li>Token validity: ${authToken ? '✅ Token exists' : '❌ No token'}</li>
+                        <li>Token format: ${authToken && authToken.split('.').length === 3 ? '✅ Valid JWT format' : '❌ Invalid format'}</li>
+                        <li>Authorization header: Should be "Bearer ${authToken ? authToken.substring(0, 20) + '...' : 'N/A'}"</li>
+                    </ul>
+
+                    <h5>2. Backend Route Issues:</h5>
+                    <ul>
+                        <li>Endpoint: DELETE /api/registrations/:id</li>
+                        <li>Middleware: authenticateToken should be applied</li>
+                        <li>Teacher ID comparison: Should use req.teacher._id</li>
+                        <li>String comparison: Should use .toString() for both sides</li>
+                    </ul>
+
+                    <h5>3. Competition Deadline Issues:</h5>
+                    <ul>
+                        <li>Current date: ${new Date().toISOString()}</li>
+                        <li>Check: Registration deadline must be in the future</li>
+                        <li>Competition status: Must be 'upcoming'</li>
+                    </ul>
+
+                    <h5>4. Database Issues:</h5>
+                    <ul>
+                        <li>Registration existence: Must exist in database</li>
+                        <li>Teacher ownership: Registration.teacher must match logged-in teacher</li>
+                        <li>Population: Competition data must be populated correctly</li>
+                    </ul>
+
+                    <h5>5. Frontend Issues:</h5>
+                    <ul>
+                        <li>API Service: Should use apiService.deleteRegistration()</li>
+                        <li>Error handling: Check response.data.error vs response.data.message</li>
+                        <li>CORS: Cross-origin requests should be allowed</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        async function createTestRegistration() {
+            const resultDiv = document.getElementById('createResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '⏳ Creating test registration...';
+            
+            try {
+                // First get competitions
+                const competitionsResponse = await fetch('http://localhost:4000/api/competitions', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const competitions = await competitionsResponse.json();
+                
+                if (!competitionsResponse.ok || !competitions.length) {
+                    resultDiv.innerHTML = '<div class="error">❌ No competitions available for testing</div>';
+                    return;
+                }
+
+                // Get the first upcoming competition
+                const upcomingCompetition = competitions.find(c => c.status === 'upcoming');
+                
+                if (!upcomingCompetition) {
+                    resultDiv.innerHTML = '<div class="error">❌ No upcoming competitions available for testing</div>';
+                    return;
+                }
+
+                // Get students
+                const studentsResponse = await fetch('http://localhost:4000/api/students?limit=5', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const studentsData = await studentsResponse.json();
+                const students = studentsData.data || studentsData;
+                
+                if (!studentsResponse.ok || !students.length) {
+                    resultDiv.innerHTML = '<div class="error">❌ No students available for testing</div>';
+                    return;
+                }
+
+                // Create registration
+                const registrationResponse = await fetch('http://localhost:4000/api/registrations', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        competitionId: upcomingCompetition._id,
+                        studentIds: [students[0]._id] // Just register one student
+                    }),
+                });
+
+                const registrationData = await registrationResponse.json();
+                
+                if (registrationResponse.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Test registration created successfully!<br>
+                            <strong>Competition:</strong> ${upcomingCompetition.name}<br>
+                            <strong>Student:</strong> ${students[0].firstName} ${students[0].lastName}<br>
+                            <strong>Registration ID:</strong> ${registrationData.registration._id}
+                        </div>
+                    `;
+                    // Refresh registrations list
+                    fetchRegistrations();
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Failed to create test registration<br>
+                            <strong>Error:</strong> ${registrationData.error || registrationData.message}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error creating test registration: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-populate auth token if it exists
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                authToken = token;
+                const resultDiv = document.getElementById('loginResult');
+                resultDiv.innerHTML = `<div class="success">✅ Found existing token: ${token.substring(0, 30)}...</div>`;
+            }
+        };
+    </script>
+</body>
+</html>

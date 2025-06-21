@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .result { margin: 10px 0; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Students API Test</h1>
+        <p>Testing the pagination fix for competition registration</p>
+        
+        <div>
+            <button onclick="testLogin()">1. Login</button>
+            <button onclick="testDefaultPagination()">2. Test Default Pagination</button>
+            <button onclick="testHighLimit()">3. Test High Limit (1000)</button>
+            <button onclick="testCompetitionWorkflow()">4. Test Competition Workflow</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let token = '';
+        const API_BASE = 'http://localhost:4000/api';
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        async function testLogin() {
+            try {
+                log('🔐 Testing authentication...', 'info');
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    token = data.token;
+                    log('✅ Authentication successful!', 'success');
+                } else {
+                    log(`❌ Authentication failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Authentication error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDefaultPagination() {
+            if (!token) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+            
+            try {
+                log('📄 Testing default pagination (no limit)...', 'info');
+                const response = await fetch(`${API_BASE}/students`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`📊 Default pagination: ${data.data.length} students returned, ${data.pagination.total} total`, 'success');
+                    log(`Page: ${data.pagination.page}, Limit: ${data.pagination.limit}, Pages: ${data.pagination.pages}`, 'info');
+                } else {
+                    log(`❌ Default pagination failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Default pagination error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testHighLimit() {
+            if (!token) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+            
+            try {
+                log('🔢 Testing high limit (1000 students)...', 'info');
+                const response = await fetch(`${API_BASE}/students?limit=1000`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`📊 High limit test: ${data.data.length} students returned, ${data.pagination.total} total`, 'success');
+                    log(`All students retrieved: ${data.data.length === data.pagination.total ? '✅ YES' : '❌ NO'}`, data.data.length === data.pagination.total ? 'success' : 'error');
+                    
+                    // Show grade distribution
+                    const gradeCount = {};
+                    data.data.forEach(student => {
+                        gradeCount[student.grade] = (gradeCount[student.grade] || 0) + 1;
+                    });
+                    
+                    const gradeInfo = Object.entries(gradeCount)
+                        .map(([grade, count]) => `Grade ${grade}: ${count}`)
+                        .join('\n');
+                    
+                    log(`Grade distribution:\n${gradeInfo}`, 'info');
+                } else {
+                    log(`❌ High limit test failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ High limit test error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCompetitionWorkflow() {
+            if (!token) {
+                log('❌ Please login first!', 'error');
+                return;
+            }
+            
+            try {
+                log('🏆 Testing competition workflow...', 'info');
+                
+                // Simulate the exact API call that the Competition page makes
+                const studentsResponse = await fetch(`${API_BASE}/students?limit=1000`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const studentsData = await studentsResponse.json();
+                
+                // Fetch competitions
+                const competitionsResponse = await fetch(`${API_BASE}/competitions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const competitionsData = await competitionsResponse.json();
+                
+                if (studentsResponse.ok && competitionsResponse.ok) {
+                    const students = studentsData.data;
+                    const competitions = competitionsData.data || competitionsData;
+                    
+                    log(`✅ Competition workflow test successful!`, 'success');
+                    log(`Students available for registration: ${students.length}`, 'success');
+                    log(`Competitions available: ${competitions.length}`, 'success');
+                    
+                    if (competitions.length > 0) {
+                        const testComp = competitions[0];
+                        log(`Sample competition: "${testComp.name}" (eligible grades: ${testComp.eligibleGrades.join(', ')})`, 'info');
+                        
+                        // Show how many students from each grade are available
+                        const eligibleCount = students.filter(s => testComp.eligibleGrades.includes(s.grade)).length;
+                        const nonEligibleCount = students.filter(s => !testComp.eligibleGrades.includes(s.grade)).length;
+                        
+                        log(`For this competition:`, 'info');
+                        log(`- Eligible students: ${eligibleCount}`, 'info');
+                        log(`- Non-eligible students: ${nonEligibleCount}`, 'info');
+                        log(`- Total available (after grade filtering removal): ${students.length} ✅`, 'success');
+                    }
+                } else {
+                    log(`❌ Competition workflow test failed`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Competition workflow error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-login on page load
+        window.addEventListener('load', function() {
+            log('🚀 Students API Test initialized', 'info');
+        });
+    </script>
+</body>
+</html>

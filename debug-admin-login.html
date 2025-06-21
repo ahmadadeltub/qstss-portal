@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login Debug - QSTSS Portal</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn.danger { background: #dc3545; }
+        .btn.danger:hover { background: #c82333; }
+        .btn.success { background: #28a745; }
+        .btn.success:hover { background: #218838; }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .user-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Admin Login Debug - QSTSS Portal</h1>
+        <p>Debug tool to investigate admin user authentication issues</p>
+
+        <!-- Current User Check -->
+        <div class="test-section">
+            <h3>👤 Current Authentication Status</h3>
+            <button class="btn" onclick="checkCurrentAuth()">Check Current Auth</button>
+            <button class="btn danger" onclick="clearAuthData()">Clear All Auth Data</button>
+            <div id="current-auth-result"></div>
+        </div>
+
+        <!-- Test Database Users -->
+        <div class="test-section">
+            <h3>👥 Database Admin Users</h3>
+            <button class="btn" onclick="listAdminUsers()">List Admin Users</button>
+            <div id="admin-users-result"></div>
+        </div>
+
+        <!-- Test Direct API Login -->
+        <div class="test-section">
+            <h3>🔐 Direct API Login Test</h3>
+            <div class="form-group">
+                <label for="test-email">Email:</label>
+                <input type="email" id="test-email" value="admin@qstss.edu.qa">
+            </div>
+            <div class="form-group">
+                <label for="test-password">Password:</label>
+                <input type="password" id="test-password" value="admin123">
+            </div>
+            <button class="btn" onclick="testDirectLogin()">Test Login</button>
+            <button class="btn" onclick="testSecondAdmin()">Test Second Admin</button>
+            <div id="login-test-result"></div>
+        </div>
+
+        <!-- Test Token Validation -->
+        <div class="test-section">
+            <h3>🔍 Token Validation Test</h3>
+            <button class="btn" onclick="testTokenValidation()">Test Current Token</button>
+            <button class="btn" onclick="testProfileEndpoint()">Test Profile Endpoint</button>
+            <div id="token-test-result"></div>
+        </div>
+
+        <!-- Create New Admin User -->
+        <div class="test-section">
+            <h3>➕ Create New Admin User (If Needed)</h3>
+            <div class="form-group">
+                <label for="new-email">Email:</label>
+                <input type="email" id="new-email" value="newadmin@qstss.edu.qa">
+            </div>
+            <div class="form-group">
+                <label for="new-password">Password:</label>
+                <input type="password" id="new-password" value="newadmin123">
+            </div>
+            <div class="form-group">
+                <label for="new-firstname">First Name:</label>
+                <input type="text" id="new-firstname" value="New">
+            </div>
+            <div class="form-group">
+                <label for="new-lastname">Last Name:</label>
+                <input type="text" id="new-lastname" value="Admin">
+            </div>
+            <button class="btn success" onclick="createNewAdmin()">Create New Admin</button>
+            <div id="create-admin-result"></div>
+        </div>
+
+        <!-- Network Diagnostics -->
+        <div class="test-section">
+            <h3>🌐 Network & Server Diagnostics</h3>
+            <button class="btn" onclick="testBackendConnection()">Test Backend Connection</button>
+            <button class="btn" onclick="testFrontendConnection()">Test Frontend Connection</button>
+            <div id="network-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        let currentToken = localStorage.getItem('token');
+
+        function updateResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="test-section ${type}">${content}</div>`;
+        }
+
+        async function checkCurrentAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            let result = '<h4>🔍 Current Authentication Data:</h4>';
+            
+            if (token) {
+                result += `<strong>Token:</strong> ${token.substring(0, 50)}...<br>`;
+                result += `<strong>Token Length:</strong> ${token.length} characters<br>`;
+                
+                try {
+                    // Decode JWT token manually to check its contents
+                    const tokenParts = token.split('.');
+                    if (tokenParts.length === 3) {
+                        const payload = JSON.parse(atob(tokenParts[1]));
+                        result += `<strong>Token Payload:</strong><br>`;
+                        result += `<div class="code-block">${JSON.stringify(payload, null, 2)}</div>`;
+                        
+                        // Check if token is expired
+                        const now = Math.floor(Date.now() / 1000);
+                        const isExpired = payload.exp && payload.exp < now;
+                        result += `<strong>Token Status:</strong> ${isExpired ? '❌ EXPIRED' : '✅ Valid'}<br>`;
+                        
+                        if (payload.exp) {
+                            const expDate = new Date(payload.exp * 1000);
+                            result += `<strong>Expires:</strong> ${expDate.toLocaleString()}<br>`;
+                        }
+                    }
+                } catch (e) {
+                    result += `<strong>⚠️ Token decode error:</strong> ${e.message}<br>`;
+                }
+            } else {
+                result += '<strong>Token:</strong> ❌ Not found<br>';
+            }
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    result += `<strong>User Data:</strong><br>`;
+                    result += `<div class="code-block">${JSON.stringify(userData, null, 2)}</div>`;
+                } catch (e) {
+                    result += `<strong>⚠️ User data parse error:</strong> ${e.message}<br>`;
+                }
+            } else {
+                result += '<strong>User Data:</strong> ❌ Not found<br>';
+            }
+            
+            updateResult('current-auth-result', result, token && user ? 'success' : 'error');
+        }
+
+        async function clearAuthData() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            sessionStorage.clear();
+            currentToken = null;
+            
+            updateResult('current-auth-result', 
+                '<h4>🗑️ Authentication Data Cleared</h4>All tokens and user data have been removed from storage.',
+                'warning'
+            );
+        }
+
+        async function listAdminUsers() {
+            try {
+                updateResult('admin-users-result', '<h4>🔍 Fetching admin users...</h4>', 'info');
+                
+                // This would require a special endpoint or direct database access
+                // For now, we'll test if we can access the teachers endpoint
+                const response = await fetch(`${API_BASE}/teachers`, {
+                    headers: currentToken ? { 'Authorization': `Bearer ${currentToken}` } : {}
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const admins = data.filter(teacher => teacher.role === 'admin');
+                    
+                    let result = '<h4>👥 Admin Users Found:</h4>';
+                    admins.forEach(admin => {
+                        result += `
+                            <div class="user-card">
+                                <strong>${admin.firstName} ${admin.lastName}</strong><br>
+                                <strong>Email:</strong> ${admin.email}<br>
+                                <strong>Role:</strong> ${admin.role}<br>
+                                <strong>Active:</strong> ${admin.isActive ? '✅ Yes' : '❌ No'}<br>
+                                <strong>Department:</strong> ${admin.department || 'N/A'}
+                            </div>
+                        `;
+                    });
+                    
+                    updateResult('admin-users-result', result, 'success');
+                } else {
+                    updateResult('admin-users-result', 
+                        `<h4>❌ Cannot access teachers endpoint</h4>Status: ${response.status}<br>This is expected if not authenticated.`,
+                        'warning'
+                    );
+                }
+            } catch (error) {
+                updateResult('admin-users-result', 
+                    `<h4>❌ Error fetching admin users</h4>${error.message}`,
+                    'error'
+                );
+            }
+        }
+
+        async function testDirectLogin() {
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            
+            try {
+                updateResult('login-test-result', '<h4>🔐 Testing login...</h4>', 'info');
+                
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentToken = data.token;
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.teacher));
+                    
+                    let result = '<h4>✅ Login Successful!</h4>';
+                    result += `<strong>Message:</strong> ${data.message}<br>`;
+                    result += `<strong>User:</strong> ${data.teacher.firstName} ${data.teacher.lastName}<br>`;
+                    result += `<strong>Role:</strong> ${data.teacher.role}<br>`;
+                    result += `<strong>Email:</strong> ${data.teacher.email}<br>`;
+                    result += `<strong>Token:</strong> ${data.token.substring(0, 50)}...<br>`;
+                    
+                    updateResult('login-test-result', result, 'success');
+                } else {
+                    let result = '<h4>❌ Login Failed</h4>';
+                    result += `<strong>Status:</strong> ${response.status}<br>`;
+                    result += `<strong>Error:</strong> ${data.error || data.message}<br>`;
+                    
+                    updateResult('login-test-result', result, 'error');
+                }
+            } catch (error) {
+                updateResult('login-test-result', 
+                    `<h4>❌ Network Error</h4>${error.message}`,
+                    'error'
+                );
+            }
+        }
+
+        async function testSecondAdmin() {
+            document.getElementById('test-email').value = 'a.tubaishat1704@education.qa';
+            document.getElementById('test-password').value = 'admin123'; // Try the same password
+            await testDirectLogin();
+        }
+
+        async function testTokenValidation() {
+            if (!currentToken) {
+                updateResult('token-test-result', 
+                    '<h4>❌ No Token Available</h4>Please login first to test token validation.',
+                    'error'
+                );
+                return;
+            }
+            
+            try {
+                updateResult('token-test-result', '<h4>🔍 Testing token validation...</h4>', 'info');
+                
+                const response = await fetch(`${API_BASE}/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    let result = '<h4>✅ Token Valid</h4>';
+                    result += `<strong>Profile Data:</strong><br>`;
+                    result += `<div class="code-block">${JSON.stringify(data, null, 2)}</div>`;
+                    
+                    updateResult('token-test-result', result, 'success');
+                } else {
+                    const errorData = await response.json();
+                    let result = '<h4>❌ Token Invalid</h4>';
+                    result += `<strong>Status:</strong> ${response.status}<br>`;
+                    result += `<strong>Error:</strong> ${errorData.message}<br>`;
+                    
+                    updateResult('token-test-result', result, 'error');
+                }
+            } catch (error) {
+                updateResult('token-test-result', 
+                    `<h4>❌ Token Validation Error</h4>${error.message}`,
+                    'error'
+                );
+            }
+        }
+
+        async function testProfileEndpoint() {
+            await testTokenValidation();
+        }
+
+        async function createNewAdmin() {
+            const email = document.getElementById('new-email').value;
+            const password = document.getElementById('new-password').value;
+            const firstName = document.getElementById('new-firstname').value;
+            const lastName = document.getElementById('new-lastname').value;
+            
+            try {
+                updateResult('create-admin-result', '<h4>➕ Creating new admin user...</h4>', 'info');
+                
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        firstName,
+                        lastName,
+                        role: 'admin',
+                        department: 'Administration'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let result = '<h4>✅ Admin User Created Successfully!</h4>';
+                    result += `<strong>Email:</strong> ${email}<br>`;
+                    result += `<strong>Name:</strong> ${firstName} ${lastName}<br>`;
+                    result += `<strong>Role:</strong> ${data.teacher.role}<br>`;
+                    result += '<p>You can now try logging in with this new admin user.</p>';
+                    
+                    updateResult('create-admin-result', result, 'success');
+                } else {
+                    let result = '<h4>❌ Failed to Create Admin User</h4>';
+                    result += `<strong>Status:</strong> ${response.status}<br>`;
+                    result += `<strong>Error:</strong> ${data.error || data.message}<br>`;
+                    
+                    updateResult('create-admin-result', result, 'error');
+                }
+            } catch (error) {
+                updateResult('create-admin-result', 
+                    `<h4>❌ Creation Error</h4>${error.message}`,
+                    'error'
+                );
+            }
+        }
+
+        async function testBackendConnection() {
+            try {
+                updateResult('network-result', '<h4>🌐 Testing backend connection...</h4>', 'info');
+                
+                const response = await fetch(`${API_BASE}/students/meta/filters`);
+                
+                if (response.ok) {
+                    updateResult('network-result', 
+                        '<h4>✅ Backend Connection Successful</h4>Server is running and accessible on port 4000.',
+                        'success'
+                    );
+                } else {
+                    updateResult('network-result', 
+                        `<h4>⚠️ Backend Response Issue</h4>Status: ${response.status}<br>Server is reachable but returned an error.`,
+                        'warning'
+                    );
+                }
+            } catch (error) {
+                updateResult('network-result', 
+                    `<h4>❌ Backend Connection Failed</h4>${error.message}<br>Check if backend server is running on port 4000.`,
+                    'error'
+                );
+            }
+        }
+
+        async function testFrontendConnection() {
+            try {
+                const response = await fetch('http://localhost:4001');
+                
+                if (response.ok) {
+                    updateResult('network-result', 
+                        '<h4>✅ Frontend Connection Successful</h4>Frontend is running and accessible on port 4001.',
+                        'success'
+                    );
+                } else {
+                    updateResult('network-result', 
+                        `<h4>⚠️ Frontend Response Issue</h4>Status: ${response.status}`,
+                        'warning'
+                    );
+                }
+            } catch (error) {
+                updateResult('network-result', 
+                    `<h4>❌ Frontend Connection Failed</h4>${error.message}`,
+                    'error'
+                );
+            }
+        }
+
+        // Auto-run initial checks on page load
+        window.onload = function() {
+            checkCurrentAuth();
+            testBackendConnection();
+        };
+    </script>
+</body>
+</html>

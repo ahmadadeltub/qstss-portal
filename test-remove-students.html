@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Remove Students from Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #cce7ff; border-color: #99d6ff; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .registration-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        .student-card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .feature-list {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Test Remove Students from Registration</h1>
+        
+        <div class="feature-list">
+            <h3>✨ New Feature Added:</h3>
+            <ul>
+                <li><strong>Remove Individual Students:</strong> Teachers can now remove specific students from registrations</li>
+                <li><strong>Smart Validation:</strong> Cannot remove last student (must cancel entire registration instead)</li>
+                <li><strong>Deadline Checking:</strong> Only allowed before competition deadline</li>
+                <li><strong>Visual Feedback:</strong> Clear tooltips and disabled states</li>
+                <li><strong>Confirmation Dialog:</strong> Prevents accidental removals</li>
+                <li><strong>Detailed Error Messages:</strong> Clear feedback on why removal might fail</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Login & Get Auth Token</h3>
+            <button onclick="login()">🔐 Login as Admin</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Get Registrations with Students</h3>
+            <button onclick="getRegistrations()">📋 Fetch Registrations</button>
+            <div id="registrationsResult" class="result"></div>
+            <div id="registrationsList"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Test Backend API for Removing Students</h3>
+            <p>Test the new backend endpoint: <code>DELETE /api/registrations/:registrationId/students/:studentId</code></p>
+            <button onclick="testRemoveStudentAPI()">🔧 Test Backend API</button>
+            <div id="apiTestResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Test Frontend MyRegistrations Page</h3>
+            <p>Open MyRegistrations page to test the new remove student buttons</p>
+            <button onclick="openMyRegistrationsPage()">📄 Open MyRegistrations Page</button>
+            <div id="pageResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Create Test Registration (if needed)</h3>
+            <p>Create a registration with multiple students to test removal</p>
+            <button onclick="createTestRegistration()">➕ Create Test Registration</button>
+            <div id="createResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 6: Validation Summary</h3>
+            <button onclick="showValidationSummary()">📊 Show Validation Rules</button>
+            <div id="validationResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let availableRegistrations = [];
+
+        async function login() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '⏳ Logging in...';
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    }),
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    resultDiv.innerHTML = \`
+                        <div class="success">
+                            ✅ Login successful!<br>
+                            <strong>User:</strong> \${data.teacher.firstName} \${data.teacher.lastName}<br>
+                            <strong>Role:</strong> \${data.teacher.role}<br>
+                            <strong>Token:</strong> \${authToken.substring(0, 30)}...
+                        </div>
+                    \`;
+                } else {
+                    resultDiv.innerHTML = \`<div class="error">❌ Login failed: \${data.message || 'Unknown error'}</div>\`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = \`<div class="error">❌ Login error: \${error.message}</div>\`;
+            }
+        }
+
+        async function getRegistrations() {
+            const resultDiv = document.getElementById('registrationsResult');
+            const listDiv = document.getElementById('registrationsList');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '⏳ Fetching registrations...';
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/registrations/my', {
+                    headers: {
+                        'Authorization': \`Bearer \${authToken}\`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const registrations = await response.json();
+                availableRegistrations = registrations;
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = \`
+                        <div class="success">
+                            ✅ Found \${registrations.length} registrations
+                        </div>
+                    \`;
+
+                    if (registrations.length > 0) {
+                        listDiv.innerHTML = registrations.map((reg, index) => {
+                            const canRemoveStudents = reg.students.length > 1 && 
+                                                    new Date() <= new Date(reg.competition.registrationDeadline) &&
+                                                    reg.competition.status === 'upcoming';
+                            
+                            return \`
+                                <div class="registration-card">
+                                    <h4>\${reg.competition?.name || 'Unknown Competition'}</h4>
+                                    <p><strong>Registration ID:</strong> \${reg._id}</p>
+                                    <p><strong>Students:</strong> \${reg.students.length}</p>
+                                    <p><strong>Status:</strong> \${reg.status}</p>
+                                    <p><strong>Competition Status:</strong> \${reg.competition?.status}</p>
+                                    <p><strong>Deadline:</strong> \${new Date(reg.competition?.registrationDeadline).toLocaleDateString()}</p>
+                                    <p><strong>Can Remove Students:</strong> \${canRemoveStudents ? '✅ YES' : '❌ NO'}</p>
+                                    
+                                    <h5>Students:</h5>
+                                    \${reg.students.map(studentReg => \`
+                                        <div class="student-card">
+                                            <div>
+                                                <strong>\${studentReg.student.firstName} \${studentReg.student.lastName}</strong><br>
+                                                ID: \${studentReg.student.studentId} | Class: \${studentReg.student.class}
+                                            </div>
+                                            <div>
+                                                \${canRemoveStudents ? 
+                                                    \`<button onclick="testRemoveSpecificStudent('\${reg._id}', '\${studentReg.student._id}', '\${studentReg.student.firstName} \${studentReg.student.lastName}')">🗑️ Remove</button>\` :
+                                                    \`<button disabled>🚫 Cannot Remove</button>\`
+                                                }
+                                            </div>
+                                        </div>
+                                    \`).join('')}
+                                </div>
+                            \`;
+                        }).join('');
+                    } else {
+                        listDiv.innerHTML = '<div class="info">No registrations found. Create a test registration to test removal.</div>';
+                    }
+                } else {
+                    resultDiv.innerHTML = \`<div class="error">❌ Failed to fetch registrations: \${registrations.error || 'Unknown error'}</div>\`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = \`<div class="error">❌ Error: \${error.message}</div>\`;
+            }
+        }
+
+        async function testRemoveStudentAPI() {
+            const resultDiv = document.getElementById('apiTestResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            if (availableRegistrations.length === 0) {
+                resultDiv.innerHTML = '<div class="warning">⚠️ Please fetch registrations first</div>';
+                return;
+            }
+
+            // Find a registration with multiple students
+            const testRegistration = availableRegistrations.find(reg => reg.students.length > 1);
+            
+            if (!testRegistration) {
+                resultDiv.innerHTML = '<div class="warning">⚠️ No registrations with multiple students found. Create a test registration first.</div>';
+                return;
+            }
+
+            const registrationId = testRegistration._id;
+            const studentId = testRegistration.students[0].student._id;
+            const studentName = \`\${testRegistration.students[0].student.firstName} \${testRegistration.students[0].student.lastName}\`;
+            
+            resultDiv.innerHTML = \`⏳ Testing removal of \${studentName}...\`;
+            
+            try {
+                const response = await fetch(\`http://localhost:4000/api/registrations/\${registrationId}/students/\${studentId}\`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': \`Bearer \${authToken}\`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = \`
+                        <div class="success">
+                            ✅ Successfully removed student via API!<br>
+                            <strong>Student:</strong> \${studentName}<br>
+                            <strong>Message:</strong> \${data.message}<br>
+                            <strong>Remaining Students:</strong> \${data.registration.students.length}
+                        </div>
+                    \`;
+                    // Refresh registrations list
+                    getRegistrations();
+                } else {
+                    resultDiv.innerHTML = \`
+                        <div class="error">
+                            ❌ API test failed!<br>
+                            <strong>Status:</strong> \${response.status}<br>
+                            <strong>Error:</strong> \${data.error}<br>
+                        </div>
+                    \`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = \`<div class="error">❌ API error: \${error.message}</div>\`;
+            }
+        }
+
+        async function testRemoveSpecificStudent(registrationId, studentId, studentName) {
+            const confirmRemoval = confirm(\`Remove \${studentName} from registration?\`);
+            if (!confirmRemoval) return;
+
+            try {
+                const response = await fetch(\`http://localhost:4000/api/registrations/\${registrationId}/students/\${studentId}\`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': \`Bearer \${authToken}\`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(\`✅ Successfully removed \${studentName}!\`);
+                    getRegistrations(); // Refresh the list
+                } else {
+                    alert(\`❌ Failed to remove student: \${data.error}\`);
+                }
+            } catch (error) {
+                alert(\`❌ Error: \${error.message}\`);
+            }
+        }
+
+        function openMyRegistrationsPage() {
+            const resultDiv = document.getElementById('pageResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            window.open('http://localhost:3000/registrations', '_blank');
+            
+            resultDiv.innerHTML = \`
+                <div class="info">
+                    📄 MyRegistrations page opened in new tab.<br>
+                    <strong>Test Instructions:</strong><br>
+                    1. Navigate to the registrations with multiple students<br>
+                    2. Expand the "Show Student Details" section<br>
+                    3. Look for the small 🗑️ (PersonRemove) icon on each student card<br>
+                    4. Hover over the icon to see the tooltip<br>
+                    5. Click to remove a student and confirm in the dialog<br>
+                    6. Verify the student is removed and the list updates<br>
+                    7. Try to remove the last student - should be disabled with tooltip explanation
+                </div>
+            \`;
+        }
+
+        async function createTestRegistration() {
+            const resultDiv = document.getElementById('createResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '⏳ Creating test registration with multiple students...';
+            
+            try {
+                // Get competitions
+                const competitionsResponse = await fetch('http://localhost:4000/api/competitions', {
+                    headers: {
+                        'Authorization': \`Bearer \${authToken}\`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const competitions = await competitionsResponse.json();
+                const upcomingCompetition = competitions.find(c => c.status === 'upcoming');
+                
+                if (!upcomingCompetition) {
+                    resultDiv.innerHTML = '<div class="error">❌ No upcoming competitions found</div>';
+                    return;
+                }
+
+                // Get students (get at least 3 for testing)
+                const studentsResponse = await fetch('http://localhost:4000/api/students?limit=5', {
+                    headers: {
+                        'Authorization': \`Bearer \${authToken}\`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const studentsData = await studentsResponse.json();
+                const students = studentsData.data || studentsData;
+                
+                if (!students || students.length < 3) {
+                    resultDiv.innerHTML = '<div class="error">❌ Need at least 3 students for testing</div>';
+                    return;
+                }
+
+                // Create registration with 3 students
+                const registrationResponse = await fetch('http://localhost:4000/api/registrations', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': \`Bearer \${authToken}\`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        competitionId: upcomingCompetition._id,
+                        studentIds: [students[0]._id, students[1]._id, students[2]._id]
+                    }),
+                });
+
+                const registrationData = await registrationResponse.json();
+                
+                if (registrationResponse.ok) {
+                    resultDiv.innerHTML = \`
+                        <div class="success">
+                            ✅ Test registration created successfully!<br>
+                            <strong>Competition:</strong> \${upcomingCompetition.name}<br>
+                            <strong>Students:</strong> 3 students registered<br>
+                            <strong>Registration ID:</strong> \${registrationData.registration._id}
+                        </div>
+                    \`;
+                    // Refresh registrations list
+                    getRegistrations();
+                } else {
+                    resultDiv.innerHTML = \`
+                        <div class="error">
+                            ❌ Failed to create test registration<br>
+                            <strong>Error:</strong> \${registrationData.error || registrationData.message}
+                        </div>
+                    \`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = \`<div class="error">❌ Error: \${error.message}</div>\`;
+            }
+        }
+
+        function showValidationSummary() {
+            const resultDiv = document.getElementById('validationResult');
+            
+            resultDiv.innerHTML = \`
+                <div class="info">
+                    <h4>🔍 Remove Student Validation Rules</h4>
+                    
+                    <h5>✅ When Student Removal is ALLOWED:</h5>
+                    <ul>
+                        <li>Registration has MORE than 1 student</li>
+                        <li>Current date is BEFORE competition deadline</li>
+                        <li>Competition status is 'upcoming'</li>
+                        <li>Registration status is not 'cancelled'</li>
+                        <li>User owns the registration (or is admin)</li>
+                    </ul>
+
+                    <h5>❌ When Student Removal is BLOCKED:</h5>
+                    <ul>
+                        <li><strong>Last Student:</strong> "Cannot remove last student - cancel registration instead"</li>
+                        <li><strong>Deadline Passed:</strong> "Deadline passed (MM/DD/YYYY)"</li>
+                        <li><strong>Competition Ended:</strong> "Competition is completed/active"</li>
+                        <li><strong>Registration Cancelled:</strong> "Registration is cancelled"</li>
+                    </ul>
+
+                    <h5>🎯 User Experience Features:</h5>
+                    <ul>
+                        <li><strong>Visual Indicators:</strong> Remove button always visible but disabled with tooltip when not allowed</li>
+                        <li><strong>Confirmation Dialog:</strong> Prevents accidental removals</li>
+                        <li><strong>Success Feedback:</strong> Shows which student was removed from which competition</li>
+                        <li><strong>Error Handling:</strong> Detailed error messages for different failure scenarios</li>
+                        <li><strong>Auto Refresh:</strong> Registration list updates after successful removal</li>
+                    </li>
+
+                    <h5>🔧 Technical Implementation:</h5>
+                    <ul>
+                        <li><strong>Backend Endpoint:</strong> DELETE /api/registrations/:registrationId/students/:studentId</li>
+                        <li><strong>Frontend Method:</strong> apiService.removeStudentFromRegistration()</li>
+                        <li><strong>Database Update:</strong> Removes student from registration.students array</li>
+                        <li><strong>Validation:</strong> Server-side checks before removal</li>
+                    </ul>
+                </div>
+            \`;
+        }
+
+        // Auto-populate auth token if it exists
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                authToken = token;
+                const resultDiv = document.getElementById('loginResult');
+                resultDiv.innerHTML = \`<div class="success">✅ Found existing token: \${token.substring(0, 30)}...</div>\`;
+            }
+        };
+    </script>
+</body>
+</html>

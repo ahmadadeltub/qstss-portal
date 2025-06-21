@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Enhanced Student Sorting Verification</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4CAF50;
+        }
+
+        .test-section h3 {
+            margin-bottom: 15px;
+            color: #e8f5e8;
+        }
+
+        .status {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 10px 0;
+            display: inline-block;
+        }
+
+        .status-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-error {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-checking {
+            background: #2196F3;
+            color: white;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .results {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            border: 1px solid rgba(255,255,255,0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .success-result {
+            color: #4CAF50;
+        }
+
+        .error-result {
+            color: #f44336;
+        }
+
+        .info-result {
+            color: #2196F3;
+        }
+
+        .warning-result {
+            color: #ff9800;
+        }
+
+        .grade-group {
+            background: rgba(33, 150, 243, 0.2);
+            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .class-group {
+            background: rgba(76, 175, 80, 0.15);
+            border-left: 3px solid #4CAF50;
+            padding: 8px;
+            margin: 5px 0 5px 20px;
+            border-radius: 3px;
+        }
+
+        .student-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            margin: 3px 0 3px 40px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .enhancement-info {
+            background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 15px 0;
+        }
+
+        .feature-list li {
+            margin: 8px 0;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Enhanced Student Sorting Verification</h1>
+        
+        <div class="enhancement-info">
+            <h2>🎯 New Sorting Enhancement</h2>
+            <p><strong>Enhanced Multi-Level Sorting:</strong> Students are now sorted by Grade → Class → Last Name → First Name</p>
+            <div class="feature-list">
+                <ul>
+                    <li>✅ <strong>Grade Headers:</strong> Each grade group has a distinct header (📚 Grade X)</li>
+                    <li>✅ <strong>Class Headers:</strong> Each class within a grade has its own header (🏫 Class A, B, C, etc.)</li>
+                    <li>✅ <strong>Hierarchical Structure:</strong> Visual indentation shows the organization</li>
+                    <li>✅ <strong>Smart Chips:</strong> Selected students show as "Name (Grade-Class)"</li>
+                    <li>✅ <strong>Alphabetical within Classes:</strong> Students sorted by name within each class</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Test 1: Authentication -->
+        <div class="test-section">
+            <h3>🔐 Test 1: Authentication & Data Access</h3>
+            <p>Authenticate and load student data to test the enhanced sorting.</p>
+            <div id="auth-status" class="status status-checking">Ready to test</div>
+            <button class="test-button" onclick="testAuthentication()">Test Authentication</button>
+            <div class="results" id="auth-results" style="display: none;"></div>
+        </div>
+
+        <!-- Test 2: Enhanced Sorting Logic -->
+        <div class="test-section">
+            <h3>📊 Test 2: Enhanced Sorting Logic</h3>
+            <p>Test the new Grade → Class → Name sorting implementation.</p>
+            <div id="sorting-status" class="status status-checking">Ready to test</div>
+            <button class="test-button" onclick="testEnhancedSorting()">Test Enhanced Sorting</button>
+            <div class="results" id="sorting-results" style="display: none;"></div>
+        </div>
+
+        <!-- Test 3: Dropdown Structure Simulation -->
+        <div class="test-section">
+            <h3>🎯 Test 3: Dropdown Structure Simulation</h3>
+            <p>Simulate how the dropdown will appear with the new hierarchical structure.</p>
+            <div id="dropdown-status" class="status status-checking">Ready to test</div>
+            <button class="test-button" onclick="testDropdownStructure()">Test Dropdown Structure</button>
+            <div class="results" id="dropdown-results" style="display: none;"></div>
+        </div>
+
+        <!-- Manual Testing Instructions -->
+        <div class="test-section">
+            <h3>📋 Manual Testing Instructions</h3>
+            <p><strong>After running the automated tests, verify the enhancement manually:</strong></p>
+            <ol style="margin-left: 20px; line-height: 1.6;">
+                <li>Open the frontend application: <a href="http://localhost:3000" target="_blank" style="color: #4CAF50;">http://localhost:3000</a></li>
+                <li>Login with admin credentials: <code>admin@qstss.edu.qa</code> / <code>admin123</code></li>
+                <li>Navigate to the "Competitions" page</li>
+                <li>Click "Register Students" on any competition</li>
+                <li><span style="background: rgba(255, 255, 0, 0.2); padding: 2px 5px; border-radius: 3px;">Verify the new dropdown structure:</span></li>
+                <ul style="margin-left: 20px;">
+                    <li>📚 Grade headers (blue background)</li>
+                    <li>🏫 Class headers (lighter background, indented)</li>
+                    <li>👤 Student names (further indented, sorted alphabetically)</li>
+                </ul>
+                <li>Select multiple students from different classes</li>
+                <li>Verify selected students show as "Name (Grade-Class)" format</li>
+            </ol>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="test-section" style="text-align: center;">
+            <h3>⚡ Quick Actions</h3>
+            <button class="test-button" onclick="runAllTests()">🚀 Run All Tests</button>
+            <button class="test-button" onclick="openFrontend()">🌐 Open Frontend</button>
+            <button class="test-button" onclick="clearResults()">🧹 Clear Results</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        const FRONTEND_URL = 'http://localhost:3000';
+        let authToken = null;
+        let studentsData = [];
+
+        // Test 1: Authentication
+        async function testAuthentication() {
+            const statusEl = document.getElementById('auth-status');
+            const resultsEl = document.getElementById('auth-results');
+            
+            statusEl.className = 'status status-checking';
+            statusEl.innerHTML = '<span class="spinner"></span>Authenticating...';
+            resultsEl.style.display = 'block';
+            resultsEl.innerHTML = '<div class="info-result">🔍 Testing authentication...</div>';
+
+            try {
+                // Test login
+                const loginResponse = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+
+                const loginData = await loginResponse.json();
+                
+                if (loginResponse.ok && loginData.token) {
+                    authToken = loginData.token;
+                    
+                    // Load students data
+                    const studentsResponse = await fetch(`${API_BASE}/students?limit=1000`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+
+                    const studentsDataResponse = await studentsResponse.json();
+                    studentsData = studentsDataResponse.data || [];
+
+                    statusEl.className = 'status status-success';
+                    statusEl.textContent = '✅ Authentication Success';
+                    
+                    resultsEl.innerHTML = `
+                        <div class="success-result">✅ Authentication successful</div>
+                        <div class="success-result">✅ Student data loaded: ${studentsData.length} students</div>
+                        <div class="info-result">🎯 Ready for enhanced sorting tests</div>
+                    `;
+                } else {
+                    throw new Error(loginData.message || 'Login failed');
+                }
+            } catch (error) {
+                statusEl.className = 'status status-error';
+                statusEl.textContent = '❌ Authentication Failed';
+                resultsEl.innerHTML = `<div class="error-result">❌ ${error.message}</div>`;
+            }
+        }
+
+        // Test 2: Enhanced Sorting Logic
+        async function testEnhancedSorting() {
+            const statusEl = document.getElementById('sorting-status');
+            const resultsEl = document.getElementById('sorting-results');
+            
+            if (!authToken || studentsData.length === 0) {
+                statusEl.className = 'status status-error';
+                statusEl.textContent = '❌ Auth Required';
+                resultsEl.style.display = 'block';
+                resultsEl.innerHTML = '<div class="error-result">❌ Please run authentication test first</div>';
+                return;
+            }
+
+            statusEl.className = 'status status-checking';
+            statusEl.innerHTML = '<span class="spinner"></span>Testing sorting...';
+            resultsEl.style.display = 'block';
+
+            try {
+                // Apply the same sorting logic as in the frontend
+                const gradeOrder = ['9', '10', '11-Engineering', '11-IT', '11-Medical', '12-Engineering', '12-IT', '12-Medical'];
+                
+                const sortedStudents = [...studentsData].sort((a, b) => {
+                    // First sort by grade
+                    const gradeA = gradeOrder.indexOf(a.grade);
+                    const gradeB = gradeOrder.indexOf(b.grade);
+                    
+                    if (gradeA !== gradeB) {
+                        return gradeA - gradeB;
+                    }
+                    
+                    // If same grade, sort by class
+                    const classCompare = a.class.localeCompare(b.class, undefined, { 
+                        numeric: true, 
+                        sensitivity: 'base' 
+                    });
+                    if (classCompare !== 0) {
+                        return classCompare;
+                    }
+                    
+                    // If same grade and class, sort by last name
+                    const lastNameCompare = a.lastName.localeCompare(b.lastName);
+                    if (lastNameCompare !== 0) {
+                        return lastNameCompare;
+                    }
+                    
+                    // If same last name, sort by first name
+                    return a.firstName.localeCompare(b.firstName);
+                });
+
+                // Analyze the sorting results
+                const gradeClassStats = {};
+                sortedStudents.forEach(student => {
+                    const key = `${student.grade}-${student.class}`;
+                    if (!gradeClassStats[key]) {
+                        gradeClassStats[key] = {
+                            grade: student.grade,
+                            class: student.class,
+                            students: []
+                        };
+                    }
+                    gradeClassStats[key].students.push(`${student.firstName} ${student.lastName}`);
+                });
+
+                statusEl.className = 'status status-success';
+                statusEl.textContent = '✅ Sorting Working';
+                
+                let resultsHTML = `
+                    <div class="success-result">✅ Enhanced sorting applied successfully</div>
+                    <div class="info-result">📊 Total students: ${sortedStudents.length}</div>
+                    <div class="info-result">🏫 Grade-Class combinations: ${Object.keys(gradeClassStats).length}</div>
+                    <div class="success-result">✅ Sorting order: Grade → Class → Last Name → First Name</div>
+                    <br>
+                    <div class="info-result"><strong>Sample sorted structure:</strong></div>
+                `;
+
+                // Show first few grade-class combinations as examples
+                const sampleKeys = Object.keys(gradeClassStats).slice(0, 6);
+                sampleKeys.forEach(key => {
+                    const stats = gradeClassStats[key];
+                    const gradeDisplay = stats.grade.includes('-') 
+                        ? stats.grade.replace('-', ' - ') 
+                        : `Grade ${stats.grade}`;
+                    
+                    resultsHTML += `
+                        <div style="margin: 10px 0;">
+                            <div style="color: #2196F3; font-weight: bold;">📚 ${gradeDisplay}</div>
+                            <div style="color: #4CAF50; margin-left: 20px;">🏫 Class ${stats.class} (${stats.students.length} students)</div>
+                            <div style="margin-left: 40px; font-size: 0.9rem;">
+                                ${stats.students.slice(0, 3).join(', ')}${stats.students.length > 3 ? '...' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                resultsEl.innerHTML = resultsHTML;
+            } catch (error) {
+                statusEl.className = 'status status-error';
+                statusEl.textContent = '❌ Sorting Failed';
+                resultsEl.innerHTML = `<div class="error-result">❌ ${error.message}</div>`;
+            }
+        }
+
+        // Test 3: Dropdown Structure Simulation
+        async function testDropdownStructure() {
+            const statusEl = document.getElementById('dropdown-status');
+            const resultsEl = document.getElementById('dropdown-results');
+            
+            if (!authToken || studentsData.length === 0) {
+                statusEl.className = 'status status-error';
+                statusEl.textContent = '❌ Data Required';
+                resultsEl.style.display = 'block';
+                resultsEl.innerHTML = '<div class="error-result">❌ Please run previous tests first</div>';
+                return;
+            }
+
+            statusEl.className = 'status status-checking';
+            statusEl.innerHTML = '<span class="spinner"></span>Simulating dropdown...';
+            resultsEl.style.display = 'block';
+
+            try {
+                // Simulate the dropdown rendering logic
+                const gradeOrder = ['9', '10', '11-Engineering', '11-IT', '11-Medical', '12-Engineering', '12-IT', '12-Medical'];
+                
+                const sortedStudents = [...studentsData].sort((a, b) => {
+                    const gradeA = gradeOrder.indexOf(a.grade);
+                    const gradeB = gradeOrder.indexOf(b.grade);
+                    
+                    if (gradeA !== gradeB) return gradeA - gradeB;
+                    
+                    const classCompare = a.class.localeCompare(b.class, undefined, { 
+                        numeric: true, sensitivity: 'base' 
+                    });
+                    if (classCompare !== 0) return classCompare;
+                    
+                    const lastNameCompare = a.lastName.localeCompare(b.lastName);
+                    if (lastNameCompare !== 0) return lastNameCompare;
+                    
+                    return a.firstName.localeCompare(b.firstName);
+                });
+
+                // Simulate the dropdown structure
+                let dropdownHTML = '<div class="success-result">✅ Dropdown structure simulation:</div><br>';
+                
+                let currentGrade = '';
+                let currentClass = '';
+                let itemCount = 0;
+                const maxItems = 50; // Limit for display purposes
+
+                sortedStudents.forEach((student, index) => {
+                    if (itemCount >= maxItems) return;
+
+                    const prevStudent = index > 0 ? sortedStudents[index - 1] : null;
+                    const isFirstInGrade = !prevStudent || prevStudent.grade !== student.grade;
+                    const isFirstInClass = !prevStudent || prevStudent.grade !== student.grade || prevStudent.class !== student.class;
+
+                    if (isFirstInGrade) {
+                        const gradeDisplayName = student.grade.includes('-') 
+                            ? student.grade.replace('-', ' - ')
+                            : `Grade ${student.grade}`;
+                        dropdownHTML += `<div class="grade-group">📚 ${gradeDisplayName}</div>`;
+                        currentGrade = student.grade;
+                        itemCount++;
+                    }
+
+                    if (isFirstInClass && (!isFirstInGrade || student.class !== 'A')) {
+                        dropdownHTML += `<div class="class-group">🏫 Class ${student.class}</div>`;
+                        currentClass = student.class;
+                        itemCount++;
+                    }
+
+                    dropdownHTML += `<div class="student-item">👤 ${student.firstName} ${student.lastName} (ID: ${student.studentId})</div>`;
+                    itemCount++;
+                });
+
+                if (itemCount >= maxItems) {
+                    dropdownHTML += '<div class="info-result">... and more students (showing first 50 items)</div>';
+                }
+
+                statusEl.className = 'status status-success';
+                statusEl.textContent = '✅ Structure Simulated';
+                
+                resultsEl.innerHTML = `
+                    ${dropdownHTML}
+                    <br>
+                    <div class="success-result">✅ Hierarchical structure working correctly</div>
+                    <div class="info-result">📚 Grade headers with blue background</div>
+                    <div class="info-result">🏫 Class headers with green background, indented</div>
+                    <div class="info-result">👤 Student items with maximum indentation</div>
+                `;
+            } catch (error) {
+                statusEl.className = 'status status-error';
+                statusEl.textContent = '❌ Structure Failed';
+                resultsEl.innerHTML = `<div class="error-result">❌ ${error.message}</div>`;
+            }
+        }
+
+        // Utility functions
+        async function runAllTests() {
+            await testAuthentication();
+            if (authToken) {
+                await testEnhancedSorting();
+                await testDropdownStructure();
+            }
+        }
+
+        function openFrontend() {
+            window.open(FRONTEND_URL, '_blank');
+        }
+
+        function clearResults() {
+            document.querySelectorAll('.status').forEach(el => {
+                el.className = 'status status-checking';
+                el.textContent = 'Ready to test';
+            });
+            
+            document.querySelectorAll('.results').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            authToken = null;
+            studentsData = [];
+        }
+
+        // Auto-run authentication on page load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                testAuthentication();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

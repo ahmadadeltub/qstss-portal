@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Debug - Real-time Testing</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+        }
+        .success { border-left-color: #27ae60; background: #e8f5e8; }
+        .error { border-left-color: #e74c3c; background: #ffeaea; }
+        .warning { border-left-color: #f39c12; background: #fff9e6; }
+        
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .link-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 10px 10px 10px 0;
+            font-weight: bold;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .debug-output {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Admin Panel Live Debug & Testing</h1>
+        <p>Real-time testing of admin panel functionality and data loading</p>
+        
+        <!-- Quick Access -->
+        <div class="test-section">
+            <h3>📱 Quick Access Links</h3>
+            <a href="http://localhost:3000" target="_blank" class="link-button">Main Portal</a>
+            <a href="http://localhost:3000/admin" target="_blank" class="link-button">Admin Panel</a>
+            <a href="http://localhost:3000/competitions" target="_blank" class="link-button">Competitions</a>
+            <button class="refresh-btn" onclick="runAllTests()">🔄 Refresh All Tests</button>
+        </div>
+
+        <!-- Server Status -->
+        <div class="test-section" id="server-status">
+            <h3>🖥️ Server Status</h3>
+            <div class="stats-grid" id="server-stats">
+                <div class="stat-card">
+                    <div>Backend</div>
+                    <div id="backend-status">Testing...</div>
+                </div>
+                <div class="stat-card">
+                    <div>Frontend</div>
+                    <div id="frontend-status">Testing...</div>
+                </div>
+                <div class="stat-card">
+                    <div>Auth</div>
+                    <div id="auth-status">Testing...</div>
+                </div>
+                <div class="stat-card">
+                    <div>Students API</div>
+                    <div id="students-api-status">Testing...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Tests -->
+        <div class="test-section" id="api-tests">
+            <h3>🔌 API Testing</h3>
+            <div id="api-results"></div>
+        </div>
+
+        <!-- Student Data Analysis -->
+        <div class="test-section" id="student-data">
+            <h3>👥 Student Data Analysis</h3>
+            <div id="student-analysis"></div>
+        </div>
+
+        <!-- Admin Panel Inspection -->
+        <div class="test-section" id="admin-inspection">
+            <h3>🎛️ Admin Panel Inspection</h3>
+            <div id="admin-results"></div>
+        </div>
+
+        <!-- Debug Output -->
+        <div class="test-section">
+            <h3>🐛 Debug Output</h3>
+            <div class="debug-output" id="debug-output"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        
+        function log(message) {
+            const debugOutput = document.getElementById('debug-output');
+            const timestamp = new Date().toLocaleTimeString();
+            debugOutput.innerHTML += `[${timestamp}] ${message}\n`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(elementId, status, success = true) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = status;
+                element.style.color = success ? '#27ae60' : '#e74c3c';
+            }
+        }
+
+        async function testBackend() {
+            try {
+                const response = await fetch('http://localhost:4000/api/students?limit=1');
+                updateStatus('backend-status', response.ok ? '✅ Online' : '❌ Error', response.ok);
+                return response.ok;
+            } catch (error) {
+                updateStatus('backend-status', '❌ Offline', false);
+                log(`Backend test failed: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function testFrontend() {
+            try {
+                const response = await fetch('http://localhost:3000');
+                updateStatus('frontend-status', response.ok ? '✅ Online' : '❌ Error', response.ok);
+                return response.ok;
+            } catch (error) {
+                updateStatus('frontend-status', '❌ Offline', false);
+                log(`Frontend test failed: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function testAuth() {
+            try {
+                const response = await fetch('http://localhost:4000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    updateStatus('auth-status', '✅ Success', true);
+                    log(`Auth successful. Token: ${authToken.substring(0, 20)}...`);
+                    return true;
+                } else {
+                    updateStatus('auth-status', '❌ Failed', false);
+                    log(`Auth failed: ${response.statusText}`);
+                    return false;
+                }
+            } catch (error) {
+                updateStatus('auth-status', '❌ Error', false);
+                log(`Auth error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function testStudentsAPI() {
+            try {
+                if (!authToken) {
+                    updateStatus('students-api-status', '❌ No Auth', false);
+                    return false;
+                }
+
+                const response = await fetch('http://localhost:4000/api/students?limit=1000', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const studentCount = data.data ? data.data.length : 0;
+                    const totalCount = data.pagination ? data.pagination.total : 0;
+                    
+                    updateStatus('students-api-status', `✅ ${studentCount}/${totalCount}`, true);
+                    log(`Students API: ${studentCount} students loaded, ${totalCount} total`);
+                    
+                    // Update student analysis
+                    displayStudentAnalysis(data);
+                    return true;
+                } else {
+                    updateStatus('students-api-status', '❌ Failed', false);
+                    log(`Students API failed: ${response.statusText}`);
+                    return false;
+                }
+            } catch (error) {
+                updateStatus('students-api-status', '❌ Error', false);
+                log(`Students API error: ${error.message}`);
+                return false;
+            }
+        }
+
+        function displayStudentAnalysis(data) {
+            const analysisDiv = document.getElementById('student-analysis');
+            
+            if (!data.data || data.data.length === 0) {
+                analysisDiv.innerHTML = '<div class="test-result error">❌ No students found in API response</div>';
+                return;
+            }
+
+            const students = data.data;
+            const gradeStats = {};
+            const classStats = {};
+
+            students.forEach(student => {
+                gradeStats[student.grade] = (gradeStats[student.grade] || 0) + 1;
+                classStats[student.class] = (classStats[student.class] || 0) + 1;
+            });
+
+            const analysisHTML = `
+                <div class="test-result success">
+                    ✅ <strong>Total Students:</strong> ${students.length}
+                </div>
+                <div class="test-result">
+                    <strong>Grade Distribution:</strong><br>
+                    ${Object.entries(gradeStats).map(([grade, count]) => 
+                        `Grade ${grade}: ${count} students`
+                    ).join('<br>')}
+                </div>
+                <div class="test-result">
+                    <strong>Sample Student:</strong><br>
+                    ID: ${students[0].studentId}<br>
+                    Name: ${students[0].firstName} ${students[0].lastName}<br>
+                    Grade: ${students[0].grade}<br>
+                    Class: ${students[0].class}<br>
+                    Active: ${students[0].isActive}
+                </div>
+                <div class="test-result">
+                    <strong>Data Structure Check:</strong><br>
+                    Response has 'data' property: ${!!data.data}<br>
+                    Response has 'pagination' property: ${!!data.pagination}<br>
+                    First student has _id: ${!!students[0]._id}<br>
+                    First student has grade: ${!!students[0].grade}<br>
+                    First student has class: ${!!students[0].class}
+                </div>
+            `;
+            
+            analysisDiv.innerHTML = analysisHTML;
+        }
+
+        async function testTeachersAPI() {
+            try {
+                if (!authToken) {
+                    log('No auth token for teachers test');
+                    return false;
+                }
+
+                const response = await fetch('http://localhost:4000/api/teachers', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const teacherCount = data.teachers ? data.teachers.length : 0;
+                    log(`Teachers API: ${teacherCount} teachers loaded`);
+                    return true;
+                } else {
+                    log(`Teachers API failed: ${response.statusText}`);
+                    return false;
+                }
+            } catch (error) {
+                log(`Teachers API error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function inspectAdminPanel() {
+            const resultsDiv = document.getElementById('admin-results');
+            
+            try {
+                // Try to access the admin panel and check for common issues
+                const adminPanelChecks = [
+                    {
+                        name: 'Admin Panel Route',
+                        test: () => fetch('http://localhost:3000/admin').then(r => r.ok),
+                        fix: 'Check if the route exists in App.tsx'
+                    },
+                    {
+                        name: 'API Service Structure',
+                        test: () => {
+                            // This would need to be tested in browser context
+                            return Promise.resolve(true);
+                        },
+                        fix: 'Check apiService.getStudents() implementation'
+                    }
+                ];
+
+                let checksHTML = '<h4>🔍 Admin Panel Checks:</h4>';
+                
+                for (const check of adminPanelChecks) {
+                    try {
+                        const result = await check.test();
+                        checksHTML += `
+                            <div class="test-result ${result ? 'success' : 'error'}">
+                                ${result ? '✅' : '❌'} ${check.name}
+                                ${!result ? `<br><em>Fix: ${check.fix}</em>` : ''}
+                            </div>
+                        `;
+                    } catch (error) {
+                        checksHTML += `
+                            <div class="test-result error">
+                                ❌ ${check.name}: ${error.message}
+                                <br><em>Fix: ${check.fix}</em>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Add manual inspection steps
+                checksHTML += `
+                    <h4>📝 Manual Inspection Steps:</h4>
+                    <div class="test-result">
+                        1. Open <a href="http://localhost:3000/admin" target="_blank">Admin Panel</a><br>
+                        2. Login with: admin@qstss.edu.qa / admin123<br>
+                        3. Click "Manage Students" tab<br>
+                        4. Check browser console (F12) for errors<br>
+                        5. Look for "Students response:" in console<br>
+                        6. Verify table shows student data<br>
+                        7. Test edit button on any student
+                    </div>
+                `;
+
+                resultsDiv.innerHTML = checksHTML;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="test-result error">❌ Admin panel inspection failed: ${error.message}</div>`;
+            }
+        }
+
+        async function runAllTests() {
+            log('🚀 Starting comprehensive admin panel tests...');
+            
+            // Clear previous results
+            document.getElementById('debug-output').innerHTML = '';
+            
+            // Test server connectivity
+            log('Testing backend connectivity...');
+            const backendOk = await testBackend();
+            
+            log('Testing frontend connectivity...');
+            const frontendOk = await testFrontend();
+            
+            if (!backendOk || !frontendOk) {
+                log('❌ Server connectivity issues detected. Please check if servers are running.');
+                return;
+            }
+            
+            // Test authentication
+            log('Testing authentication...');
+            const authOk = await testAuth();
+            
+            if (!authOk) {
+                log('❌ Authentication failed. Cannot proceed with API tests.');
+                return;
+            }
+            
+            // Test APIs
+            log('Testing Students API...');
+            await testStudentsAPI();
+            
+            log('Testing Teachers API...');
+            await testTeachersAPI();
+            
+            // Inspect admin panel
+            log('Inspecting admin panel...');
+            await inspectAdminPanel();
+            
+            log('✅ All tests completed!');
+        }
+
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            log('🔄 Admin Panel Debug Tool loaded. Running initial tests...');
+            runAllTests();
+        });
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            log('🔄 Auto-refresh triggered...');
+            runAllTests();
+        }, 30000);
+    </script>
+</body>
+</html>

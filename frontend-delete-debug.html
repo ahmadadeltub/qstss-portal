@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Delete Registration Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #cce7ff; border-color: #99d6ff; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .registration-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        .can-delete { border-color: #28a745; background-color: #d4edda; }
+        .cannot-delete { border-color: #dc3545; background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Frontend Delete Registration Debug</h1>
+        
+        <div class="step warning">
+            <h3>🎯 Goal</h3>
+            <p>Debug why the user is getting "Failed to cancel registration" error in the frontend, even though the backend delete is working correctly.</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Login & Initialize</h3>
+            <button onclick="login()">🔐 Login as Admin</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Simulate Frontend API Service</h3>
+            <p>This simulates the exact same API calls that the React frontend makes</p>
+            <button onclick="testFrontendAPIService()">🔧 Test Frontend API Service</button>
+            <div id="apiServiceResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Get Registrations & Check Deletion Eligibility</h3>
+            <button onclick="getRegistrationsAndCheckEligibility()">📋 Check Registrations</button>
+            <div id="registrationsResult" class="result"></div>
+            <div id="registrationsList"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Test Frontend Delete Function</h3>
+            <p>This simulates the exact MyRegistrations.tsx handleDelete function</p>
+            <div id="deleteButtons"></div>
+            <div id="deleteResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Network & CORS Check</h3>
+            <button onclick="checkNetworkAndCORS()">🌐 Check Network Issues</button>
+            <div id="networkResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let userRegistrations = [];
+
+        // Simulate the API service from the frontend
+        const API_BASE_URL = 'http://localhost:4000/api';
+
+        const apiService = {
+            async deleteRegistration(registrationId) {
+                const response = await fetch(`${API_BASE_URL}/registrations/${registrationId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            },
+
+            async getMyRegistrations() {
+                const response = await fetch(`${API_BASE_URL}/registrations/my`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            }
+        };
+
+        async function login() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '⏳ Logging in...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    }),
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Login successful!<br>
+                            <strong>User:</strong> ${data.teacher.firstName} ${data.teacher.lastName}<br>
+                            <strong>Role:</strong> ${data.teacher.role}<br>
+                            <strong>Token:</strong> ${authToken.substring(0, 30)}...
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Login failed: ${data.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Login error: ${error.message}</div>`;
+            }
+        }
+
+        async function testFrontendAPIService() {
+            const resultDiv = document.getElementById('apiServiceResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '⏳ Testing API service methods...';
+            
+            try {
+                // Test the exact same API service methods used by frontend
+                console.log('Testing frontend API service...');
+                
+                const registrations = await apiService.getMyRegistrations();
+                console.log('API Service getMyRegistrations result:', registrations);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Frontend API service working correctly!<br>
+                        <strong>Registrations found:</strong> ${Array.isArray(registrations) ? registrations.length : 'N/A'}<br>
+                        <strong>API Base URL:</strong> ${API_BASE_URL}<br>
+                        <strong>Authorization Header:</strong> Bearer ${authToken.substring(0, 20)}...
+                    </div>
+                `;
+                
+                userRegistrations = Array.isArray(registrations) ? registrations : [];
+                
+            } catch (error) {
+                console.error('API Service error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Frontend API service error!<br>
+                        <strong>Error:</strong> ${error.message}<br>
+                        <strong>Stack:</strong> ${error.stack}
+                    </div>
+                `;
+            }
+        }
+
+        async function getRegistrationsAndCheckEligibility() {
+            const resultDiv = document.getElementById('registrationsResult');
+            const listDiv = document.getElementById('registrationsList');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="error">❌ Please login first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '⏳ Checking registrations and deletion eligibility...';
+            
+            try {
+                const registrations = await apiService.getMyRegistrations();
+                userRegistrations = Array.isArray(registrations) ? registrations : [];
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Found ${userRegistrations.length} registrations
+                    </div>
+                `;
+
+                if (userRegistrations.length > 0) {
+                    const currentDate = new Date();
+                    
+                    listDiv.innerHTML = userRegistrations.map((reg, index) => {
+                        const deadline = new Date(reg.competition?.registrationDeadline);
+                        const canDelete = deadline > currentDate && 
+                                        reg.competition?.status === 'upcoming' && 
+                                        reg.status !== 'cancelled';
+                        
+                        return `
+                            <div class="registration-card ${canDelete ? 'can-delete' : 'cannot-delete'}">
+                                <h4>${reg.competition?.name || 'Unknown Competition'}</h4>
+                                <p><strong>ID:</strong> ${reg._id}</p>
+                                <p><strong>Status:</strong> ${reg.status}</p>
+                                <p><strong>Competition Status:</strong> ${reg.competition?.status || 'Unknown'}</p>
+                                <p><strong>Deadline:</strong> ${deadline.toLocaleString()}</p>
+                                <p><strong>Current Time:</strong> ${currentDate.toLocaleString()}</p>
+                                <p><strong>Can Delete:</strong> ${canDelete ? '✅ YES' : '❌ NO'}</p>
+                                <p><strong>Reason:</strong> ${
+                                    !canDelete 
+                                        ? (deadline <= currentDate ? 'Deadline passed' : 
+                                           reg.competition?.status !== 'upcoming' ? 'Competition not upcoming' : 
+                                           reg.status === 'cancelled' ? 'Already cancelled' : 'Unknown')
+                                        : 'All conditions met'
+                                }</p>
+                                <button onclick="simulateDelete('${reg._id}', '${reg.competition?.name || 'Unknown'}', ${canDelete})">
+                                    🧪 Test Delete (Frontend Simulation)
+                                </button>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    listDiv.innerHTML = '<div class="info">No registrations found.</div>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function simulateDelete(registrationId, competitionName, canDelete) {
+            const resultDiv = document.getElementById('deleteResult');
+            
+            resultDiv.innerHTML = `⏳ Simulating frontend delete for "${competitionName}"...`;
+            
+            // This simulates the exact same handleDelete function from MyRegistrations.tsx
+            try {
+                console.log('Starting frontend delete simulation...');
+                console.log('Registration ID:', registrationId);
+                console.log('Competition Name:', competitionName);
+                console.log('Expected to succeed:', canDelete);
+                
+                // Call the exact same API service method used by frontend
+                const result = await apiService.deleteRegistration(registrationId);
+                console.log('Delete successful, result:', result);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Frontend delete simulation SUCCESSFUL!<br>
+                        <strong>Competition:</strong> ${competitionName}<br>
+                        <strong>Backend Response:</strong> ${result.message}<br>
+                        <strong>This means the frontend should work correctly!</strong>
+                    </div>
+                `;
+                
+                // Refresh the registrations list
+                getRegistrationsAndCheckEligibility();
+                
+            } catch (error) {
+                console.error('Frontend delete simulation error:', error);
+                
+                // This simulates the exact error handling from MyRegistrations.tsx
+                const errorMessage = error.response?.data?.error || 'Failed to cancel registration';
+                
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Frontend delete simulation FAILED!<br>
+                        <strong>Competition:</strong> ${competitionName}<br>
+                        <strong>Error Message:</strong> ${errorMessage}<br>
+                        <strong>Original Error:</strong> ${error.message}<br>
+                        <strong>This is the same error the user would see!</strong>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function checkNetworkAndCORS() {
+            const resultDiv = document.getElementById('networkResult');
+            
+            resultDiv.innerHTML = '⏳ Checking network and CORS issues...';
+            
+            try {
+                // Test basic connectivity
+                const healthCheck = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'OPTIONS',
+                });
+                
+                // Test CORS headers
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': healthCheck.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': healthCheck.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': healthCheck.headers.get('Access-Control-Allow-Headers'),
+                };
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Network connectivity: OK<br>
+                        <strong>Backend URL:</strong> ${API_BASE_URL}<br>
+                        <strong>CORS Headers:</strong>
+                        <pre>${JSON.stringify(corsHeaders, null, 2)}</pre>
+                        <strong>Browser:</strong> ${navigator.userAgent}<br>
+                        <strong>Current Origin:</strong> ${window.location.origin}
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Network/CORS issue detected!<br>
+                        <strong>Error:</strong> ${error.message}<br>
+                        <strong>This could be causing the frontend delete failures!</strong>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-populate auth token if it exists
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                authToken = token;
+                const resultDiv = document.getElementById('loginResult');
+                resultDiv.innerHTML = `<div class="success">✅ Found existing token: ${token.substring(0, 30)}...</div>`;
+            }
+        };
+    </script>
+</body>
+</html>

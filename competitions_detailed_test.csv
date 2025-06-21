@@ -1,0 +1,21 @@
+Type,Competition Name,Category,Status,Start Date,End Date,Registration Deadline,Max Participants,Actual Participants,Total Registrations,Organizer,Organizer Department,Description,Location,Requirements,Prizes,Teacher Name,Teacher Department,Students Registered,Student ID,Student Name,Grade,Class
+COMPETITION,"Qatar National Mathematics Olympiad 2025",MATH,upcoming,7/15/2025,7/16/2025,6/30/2025,100,4,2,"System Administrator",Administration,"Annual mathematics competition for high school students across Qatar, hosted by Qatar Science and Technology Secondary School for Boys","","","[object Object],[object Object],[object Object]","",,,,"",,
+TEACHER,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","System Administrator",Administration,3,,"",,
+TEACHER,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","han han",Science,1,,"",,
+STUDENT,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","",,,31063405109,"TAMEEM A.HAKEEM A A BA-NOAMAN",9,09/1
+STUDENT,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","",,,31063406096,"GHANIM ABDULAZIZ J K AL-HAJAJI",9,09/1
+STUDENT,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","",,,31063401951,"ESSA ABDULRAHMAN A A ZYARA",9,09/1
+STUDENT,"Qatar National Mathematics Olympiad 2025",MATH,,,,,,,,"",,"","","","","",,,31063405638,"AHMED ALI A A AL-LENQAWI",9,09/1
+COMPETITION,"Gulf Science Fair 2025",STEM,upcoming,8/20/2025,8/22/2025,7/30/2025,80,5,2,"System Administrator",Administration,"Regional science fair showcasing innovative science projects from students across the Gulf region","","","[object Object],[object Object],[object Object]","",,,,"",,
+TEACHER,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","System Administrator",Administration,3,,"",,
+TEACHER,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","han han",Science,2,,"",,
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31063405109,"TAMEEM A.HAKEEM A A BA-NOAMAN",9,09/1
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31063406096,"GHANIM ABDULAZIZ J K AL-HAJAJI",9,09/1
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31063401951,"ESSA ABDULRAHMAN A A ZYARA",9,09/1
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31063407605,"HASSAN AQEEL A B AL-KHUZAEI",9,09/1
+STUDENT,"Gulf Science Fair 2025",STEM,,,,,,,,"",,"","","","","",,,31163402014,"MOHAMMED GHAREEB M Z AL-ABSI",9,09/1
+COMPETITION,"Arabic Literary Excellence Competition",ARABIC,upcoming,9/10/2025,9/10/2025,8/25/2025,60,,,"System Administrator",Administration,"Creative writing and poetry contest celebrating Arabic literature and contemporary expression","","","[object Object],[object Object],[object Object]","",,,,"",,
+COMPETITION,"Qatar Technology Innovation Challenge 2025",AI,upcoming,10/5/2025,10/7/2025,9/20/2025,50,2,1,"System Administrator",Administration,"Student-led technology and programming projects aligned with Qatar National Vision 2030","","","[object Object],[object Object],[object Object]","",,,,"",,
+TEACHER,"Qatar Technology Innovation Challenge 2025",AI,,,,,,,,"",,"","","","","System Administrator",Administration,2,,"",,
+STUDENT,"Qatar Technology Innovation Challenge 2025",AI,,,,,,,,"",,"","","","","",,,31063407605,"HASSAN AQEEL A B AL-KHUZAEI",9,09/1
+STUDENT,"Qatar Technology Innovation Challenge 2025",AI,,,,,,,,"",,"","","","","",,,31163402108,"NASSER HAMAD N B AHMED",9,09/1

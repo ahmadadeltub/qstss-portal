@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend-Backend Communication Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { border-left: 4px solid #4CAF50; }
+        .error { border-left: 4px solid #f44336; }
+        .warning { border-left: 4px solid #ff9800; }
+        .info { border-left: 4px solid #2196F3; }
+        h2 { color: #fff; margin-top: 0; }
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Frontend-Backend Communication Test</h1>
+        <p>This test mimics exactly what the React app does when trying to login.</p>
+
+        <!-- Test 1: Environment Check -->
+        <div class="test-section">
+            <h2>📋 Environment Configuration</h2>
+            <button onclick="testEnvironment()">Check Environment</button>
+            <div id="envResult" class="result"></div>
+        </div>
+
+        <!-- Test 2: Basic Connectivity -->
+        <div class="test-section">
+            <h2>🌐 Backend Connectivity</h2>
+            <button onclick="testConnectivity()">Test Connection</button>
+            <div id="connectivityResult" class="result"></div>
+        </div>
+
+        <!-- Test 3: CORS Test -->
+        <div class="test-section">
+            <h2>🔗 CORS Configuration</h2>
+            <button onclick="testCORS()">Test CORS</button>
+            <div id="corsResult" class="result"></div>
+        </div>
+
+        <!-- Test 4: Axios Login Test -->
+        <div class="test-section">
+            <h2>🔐 Axios Login Test (Same as React App)</h2>
+            <button onclick="testAxiosLogin()">Test Axios Login</button>
+            <div id="axiosResult" class="result"></div>
+        </div>
+
+        <!-- Test 5: Fetch Login Test -->
+        <div class="test-section">
+            <h2>🚀 Fetch Login Test (Alternative)</h2>
+            <button onclick="testFetchLogin()">Test Fetch Login</button>
+            <div id="fetchResult" class="result"></div>
+        </div>
+
+        <!-- Test 6: Network Analysis -->
+        <div class="test-section">
+            <h2>📊 Network Analysis</h2>
+            <button onclick="analyzeNetwork()">Analyze Network</button>
+            <div id="networkResult" class="result"></div>
+        </div>
+    </div>
+
+    <!-- Include Axios (same version as React app) -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js"></script>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:4000/api';
+        const FRONTEND_PORT = 3001;
+        
+        function addResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.innerHTML = message;
+        }
+
+        function addLoading(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.className = 'result info';
+            element.innerHTML = `<div class="spinner"></div>${message}`;
+        }
+
+        // Test 1: Environment Configuration
+        function testEnvironment() {
+            addLoading('envResult', 'Checking environment configuration...');
+            
+            setTimeout(() => {
+                const config = {
+                    'Frontend Port': window.location.port || '(default)',
+                    'Frontend URL': window.location.origin,
+                    'API Base URL': API_BASE_URL,
+                    'User Agent': navigator.userAgent,
+                    'Local Storage Available': typeof(Storage) !== "undefined",
+                    'Axios Available': typeof(axios) !== "undefined"
+                };
+                
+                let result = '✅ Environment Configuration:\n\n';
+                for (const [key, value] of Object.entries(config)) {
+                    result += `${key}: ${value}\n`;
+                }
+                
+                addResult('envResult', result, 'success');
+            }, 500);
+        }
+
+        // Test 2: Basic Connectivity
+        async function testConnectivity() {
+            addLoading('connectivityResult', 'Testing backend connectivity...');
+            
+            try {
+                const start = Date.now();
+                const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/health`);
+                const end = Date.now();
+                const responseTime = end - start;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('connectivityResult', 
+                        `✅ Backend is reachable!\n\nResponse Time: ${responseTime}ms\nStatus: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`, 
+                        'success');
+                } else {
+                    addResult('connectivityResult', 
+                        `❌ Backend responded with error\n\nStatus: ${response.status}\nResponse Time: ${responseTime}ms`, 
+                        'error');
+                }
+            } catch (error) {
+                addResult('connectivityResult', 
+                    `❌ Cannot reach backend server\n\nError: ${error.message}\nAPI URL: ${API_BASE_URL}`, 
+                    'error');
+            }
+        }
+
+        // Test 3: CORS Configuration
+        async function testCORS() {
+            addLoading('corsResult', 'Testing CORS configuration...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/students/meta/filters`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': `http://localhost:${FRONTEND_PORT}`
+                    }
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers')
+                };
+                
+                let result = '✅ CORS Test Results:\n\n';
+                result += `Status: ${response.status}\n`;
+                result += `CORS Headers:\n`;
+                for (const [key, value] of Object.entries(corsHeaders)) {
+                    result += `  ${key}: ${value || 'Not set'}\n`;
+                }
+                
+                if (response.ok) {
+                    addResult('corsResult', result, 'success');
+                } else {
+                    addResult('corsResult', result + `\nResponse not OK: ${response.status}`, 'warning');
+                }
+                
+            } catch (error) {
+                addResult('corsResult', 
+                    `❌ CORS Test Failed\n\nError: ${error.message}`, 
+                    'error');
+            }
+        }
+
+        // Test 4: Axios Login Test (Exact same as React app)
+        async function testAxiosLogin() {
+            addLoading('axiosResult', 'Testing login with Axios (same as React app)...');
+            
+            try {
+                // Create axios instance exactly like the React app
+                const api = axios.create({
+                    baseURL: API_BASE_URL,
+                    timeout: 10000,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                });
+
+                // Add request interceptor like React app
+                api.interceptors.request.use(
+                    (config) => {
+                        const token = localStorage.getItem('token');
+                        if (token) {
+                            config.headers.Authorization = `Bearer ${token}`;
+                        }
+                        config.headers['X-Request-ID'] = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                        return config;
+                    },
+                    (error) => {
+                        console.error('❌ Request Error:', error);
+                        return Promise.reject(error);
+                    }
+                );
+
+                // Test login exactly like authService.ts
+                const loginData = { email: 'admin@qstss.edu.qa', password: 'admin123' };
+                console.log('🔐 Testing Axios login with:', loginData);
+                
+                const response = await api.post('/auth/login', loginData);
+                
+                if (response.data.token && response.data.teacher) {
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('user', JSON.stringify(response.data.teacher));
+                    
+                    addResult('axiosResult', 
+                        `✅ Axios Login Successful!\n\nUser: ${response.data.teacher.firstName} ${response.data.teacher.lastName}\nRole: ${response.data.teacher.role}\nToken: ${response.data.token.substring(0, 50)}...\n\nResponse Status: ${response.status}\nResponse Headers: ${JSON.stringify(Object.fromEntries(Object.entries(response.headers)), null, 2)}`, 
+                        'success');
+                } else {
+                    addResult('axiosResult', 
+                        `❌ Login response missing token or user data\n\nResponse: ${JSON.stringify(response.data, null, 2)}`, 
+                        'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ Axios login error:', error);
+                
+                let errorMessage = '❌ Axios Login Failed\n\n';
+                
+                if (error.response) {
+                    // Server responded with error status
+                    errorMessage += `Server Error Response:\n`;
+                    errorMessage += `Status: ${error.response.status}\n`;
+                    errorMessage += `Data: ${JSON.stringify(error.response.data, null, 2)}\n`;
+                    errorMessage += `Headers: ${JSON.stringify(error.response.headers, null, 2)}`;
+                } else if (error.request) {
+                    // Request made but no response received
+                    errorMessage += `Network Error - No response received:\n`;
+                    errorMessage += `Request: ${JSON.stringify({
+                        url: error.config?.url,
+                        method: error.config?.method,
+                        baseURL: error.config?.baseURL,
+                        timeout: error.config?.timeout
+                    }, null, 2)}\n`;
+                    errorMessage += `Error: ${error.message}`;
+                } else {
+                    // Something else happened
+                    errorMessage += `Unknown Error: ${error.message}`;
+                }
+                
+                addResult('axiosResult', errorMessage, 'error');
+            }
+        }
+
+        // Test 5: Fetch Login Test (Alternative method)
+        async function testFetchLogin() {
+            addLoading('fetchResult', 'Testing login with Fetch API...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    addResult('fetchResult', 
+                        `✅ Fetch Login Successful!\n\nUser: ${data.teacher.firstName} ${data.teacher.lastName}\nRole: ${data.teacher.role}\nToken: ${data.token.substring(0, 50)}...\n\nStatus: ${response.status}`, 
+                        'success');
+                } else {
+                    addResult('fetchResult', 
+                        `❌ Fetch Login Failed\n\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`, 
+                        'error');
+                }
+                
+            } catch (error) {
+                addResult('fetchResult', 
+                    `❌ Fetch Login Error\n\nError: ${error.message}\nStack: ${error.stack}`, 
+                    'error');
+            }
+        }
+
+        // Test 6: Network Analysis
+        async function analyzeNetwork() {
+            addLoading('networkResult', 'Analyzing network configuration...');
+            
+            try {
+                const tests = [];
+                
+                // Test different endpoints
+                const endpoints = [
+                    `${API_BASE_URL}/health`,
+                    `${API_BASE_URL}/students/meta/filters`,
+                    `${API_BASE_URL}/auth/login`
+                ];
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        const start = Date.now();
+                        const response = await fetch(endpoint, { 
+                            method: endpoint.includes('login') ? 'POST' : 'GET',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: endpoint.includes('login') ? JSON.stringify({email: 'test', password: 'test'}) : undefined
+                        });
+                        const end = Date.now();
+                        
+                        tests.push({
+                            endpoint,
+                            status: response.status,
+                            time: end - start,
+                            ok: response.ok,
+                            headers: Object.fromEntries(response.headers.entries())
+                        });
+                    } catch (error) {
+                        tests.push({
+                            endpoint,
+                            error: error.message,
+                            time: 'N/A'
+                        });
+                    }
+                }
+                
+                let result = '📊 Network Analysis Results:\n\n';
+                tests.forEach((test, index) => {
+                    result += `${index + 1}. ${test.endpoint}\n`;
+                    if (test.error) {
+                        result += `   ❌ Error: ${test.error}\n`;
+                    } else {
+                        result += `   ✅ Status: ${test.status} (${test.time}ms)\n`;
+                        result += `   Headers: ${JSON.stringify(test.headers, null, 4)}\n`;
+                    }
+                    result += '\n';
+                });
+                
+                addResult('networkResult', result, 'info');
+                
+            } catch (error) {
+                addResult('networkResult', 
+                    `❌ Network Analysis Failed\n\nError: ${error.message}`, 
+                    'error');
+            }
+        }
+
+        // Auto-run environment check on load
+        window.onload = function() {
+            testEnvironment();
+        };
+    </script>
+</body>
+</html>

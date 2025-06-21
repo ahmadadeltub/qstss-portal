@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Sorting Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .student-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .grade-header {
+            background: rgba(25, 118, 210, 0.3);
+            padding: 10px;
+            margin: 10px 0 5px 0;
+            border-radius: 5px;
+            font-weight: bold;
+            border-left: 4px solid #1976d2;
+        }
+        .test-button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Student Sorting Verification Test</h1>
+    <p>Testing the new grade-based sorting in competition student selection</p>
+
+    <div class="test-container">
+        <h2>🔐 Authentication</h2>
+        <button class="test-button" onclick="authenticate()">Login</button>
+        <div id="auth-status">Click to authenticate</div>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Student Sorting Test</h2>
+        <button class="test-button" onclick="testStudentSorting()">Test Student Sorting</button>
+        <div id="sorting-results">Authenticate first, then test sorting</div>
+    </div>
+
+    <div class="test-container">
+        <h2>🎓 Competition Registration Simulation</h2>
+        <button class="test-button" onclick="simulateRegistration()">Simulate Registration Flow</button>
+        <div id="simulation-results">Test sorting first, then run simulation</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        let authToken = null;
+        let studentsData = [];
+        let competitionsData = [];
+
+        async function authenticate() {
+            const statusDiv = document.getElementById('auth-status');
+            statusDiv.innerHTML = '<p>🔄 Authenticating...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Authentication Successful</h3>
+                            <p><strong>User:</strong> ${data.teacher.firstName} ${data.teacher.lastName}</p>
+                            <p><strong>Role:</strong> ${data.teacher.role}</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Authentication failed');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Authentication Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testStudentSorting() {
+            const resultsDiv = document.getElementById('sorting-results');
+            
+            if (!authToken) {
+                resultsDiv.innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<p>🔄 Testing student sorting...</p>';
+            
+            try {
+                // Fetch students
+                const studentsResponse = await fetch(`${API_BASE}/students?limit=50`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const studentsData = await studentsResponse.json();
+                
+                if (!studentsResponse.ok || !studentsData.data) {
+                    throw new Error('Failed to fetch students');
+                }
+                
+                const students = studentsData.data;
+                
+                // Fetch competitions to test with
+                const competitionsResponse = await fetch(`${API_BASE}/competitions`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const competitionsData = await competitionsResponse.json();
+                
+                if (!competitionsResponse.ok || !competitionsData.data) {
+                    throw new Error('Failed to fetch competitions');
+                }
+                
+                const competitions = competitionsData.data;
+                const testCompetition = competitions[0];
+                
+                // Filter eligible students
+                const eligibleStudents = students.filter(student => 
+                    testCompetition.eligibleGrades.includes(student.grade)
+                );
+                
+                // Apply the same sorting logic as in the component
+                const sortedStudents = eligibleStudents.sort((a, b) => {
+                    const gradeOrder = ['9', '10', '11-Engineering', '11-IT', '11-Medical', '12-Engineering', '12-IT', '12-Medical'];
+                    const gradeA = gradeOrder.indexOf(a.grade);
+                    const gradeB = gradeOrder.indexOf(b.grade);
+                    
+                    if (gradeA !== gradeB) {
+                        return gradeA - gradeB;
+                    }
+                    
+                    const lastNameCompare = a.lastName.localeCompare(b.lastName);
+                    if (lastNameCompare !== 0) {
+                        return lastNameCompare;
+                    }
+                    
+                    return a.firstName.localeCompare(b.firstName);
+                });
+                
+                // Display results grouped by grade
+                let resultsHTML = `
+                    <div class="success">
+                        <h3>✅ Student Sorting Working</h3>
+                        <p><strong>Test Competition:</strong> "${testCompetition.name}"</p>
+                        <p><strong>Eligible Grades:</strong> ${testCompetition.eligibleGrades.join(', ')}</p>
+                        <p><strong>Total Eligible Students:</strong> ${sortedStudents.length}</p>
+                    </div>
+                `;
+                
+                // Group students by grade for display
+                const studentsByGrade = {};
+                sortedStudents.forEach(student => {
+                    if (!studentsByGrade[student.grade]) {
+                        studentsByGrade[student.grade] = [];
+                    }
+                    studentsByGrade[student.grade].push(student);
+                });
+                
+                // Display each grade group
+                Object.keys(studentsByGrade).forEach(grade => {
+                    const gradeDisplayName = grade.includes('-') ? grade.replace('-', ' - ') : `Grade ${grade}`;
+                    resultsHTML += `<div class="grade-header">${gradeDisplayName} (${studentsByGrade[grade].length} students)</div>`;
+                    
+                    studentsByGrade[grade].slice(0, 5).forEach(student => {
+                        resultsHTML += `
+                            <div class="student-item">
+                                <strong>${student.firstName} ${student.lastName}</strong><br>
+                                ID: ${student.studentId} | Class: ${student.class}
+                            </div>
+                        `;
+                    });
+                    
+                    if (studentsByGrade[grade].length > 5) {
+                        resultsHTML += `<div class="student-item">... and ${studentsByGrade[grade].length - 5} more students</div>`;
+                    }
+                });
+                
+                resultsDiv.innerHTML = resultsHTML;
+                
+                // Store data for simulation
+                window.testData = {
+                    students: sortedStudents,
+                    competition: testCompetition
+                };
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Sorting Test Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function simulateRegistration() {
+            const resultsDiv = document.getElementById('simulation-results');
+            
+            if (!window.testData) {
+                resultsDiv.innerHTML = '<div class="error">❌ Please run student sorting test first</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<p>🔄 Simulating registration flow...</p>';
+            
+            try {
+                const { students, competition } = window.testData;
+                
+                // Simulate selecting first 3 students (within teacher limit)
+                const selectedStudents = students.slice(0, 3);
+                
+                // Test availability check
+                const availabilityResponse = await fetch(`${API_BASE}/registrations/check-availability`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        competitionId: competition._id,
+                        studentIds: selectedStudents.map(s => s._id)
+                    })
+                });
+                
+                const availabilityData = await availabilityResponse.json();
+                
+                let resultsHTML = `
+                    <div class="success">
+                        <h3>✅ Registration Simulation Successful</h3>
+                        <p><strong>Competition:</strong> "${competition.name}"</p>
+                        <p><strong>Max Students per Teacher:</strong> ${competition.maxStudentsPerTeacher}</p>
+                        <p><strong>Selected Students:</strong> ${selectedStudents.length}</p>
+                        <p><strong>Availability Check:</strong> ${availabilityResponse.ok ? '✅ Passed' : '❌ Failed'}</p>
+                    </div>
+                `;
+                
+                resultsHTML += '<div class="grade-header">Selected Students (Sorted by Grade)</div>';
+                selectedStudents.forEach(student => {
+                    const gradeDisplay = student.grade.includes('-') ? student.grade.replace('-', ' - ') : `Grade ${student.grade}`;
+                    resultsHTML += `
+                        <div class="student-item">
+                            <strong>${student.firstName} ${student.lastName}</strong> (${gradeDisplay})<br>
+                            ID: ${student.studentId} | Class: ${student.class}
+                        </div>
+                    `;
+                });
+                
+                resultsDiv.innerHTML = resultsHTML;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Simulation Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-authenticate on load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Student Sorting Test initialized');
+        });
+    </script>
+</body>
+</html>

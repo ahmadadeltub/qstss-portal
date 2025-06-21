@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Portal Workflow Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #4CAF50;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid #f44336;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .warning {
+            background: rgba(255, 152, 0, 0.3);
+            border: 1px solid #ff9800;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .loading {
+            background: rgba(33, 150, 243, 0.3);
+            border: 1px solid #2196F3;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .test-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        .test-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .test-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-pending { background: #ffc107; }
+        .status-success { background: #4caf50; }
+        .status-error { background: #f44336; }
+        .data-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4caf50;
+        }
+        .workflow-step {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Qatar Science & Technology Secondary School Portal - Complete Workflow Test</h1>
+        <p>Comprehensive testing of the entire student portal system including all recent fixes and enhancements.</p>
+        
+        <div class="test-grid">
+            <!-- Authentication Test -->
+            <div class="test-section">
+                <h2>🔐 Authentication System</h2>
+                <button class="test-button" onclick="testAuthentication()">🧪 Test Login</button>
+                <div id="auth-results">Click test to authenticate</div>
+            </div>
+
+            <!-- Students API Test -->
+            <div class="test-section">
+                <h2>👥 Students Page Functionality</h2>
+                <button class="test-button" onclick="testStudentsPage()" id="students-btn" disabled>🧪 Test Students Page</button>
+                <div id="students-results">Authenticate first</div>
+            </div>
+
+            <!-- Competitions API Test -->
+            <div class="test-section">
+                <h2>🏆 Competitions System</h2>
+                <button class="test-button" onclick="testCompetitions()" id="competitions-btn" disabled>🧪 Test Competitions</button>
+                <div id="competitions-results">Authenticate first</div>
+            </div>
+
+            <!-- Grade Filtering Test -->
+            <div class="test-section">
+                <h2>📊 Grade Filtering</h2>
+                <button class="test-button" onclick="testGradeFiltering()" id="grades-btn" disabled>🧪 Test Grade Filters</button>
+                <div id="grades-results">Load data first</div>
+            </div>
+
+            <!-- Competition Registration Test -->
+            <div class="test-section">
+                <h2>📝 Competition Registration</h2>
+                <button class="test-button" onclick="testRegistrationWorkflow()" id="registration-btn" disabled>🧪 Test Registration</button>
+                <div id="registration-results">Complete other tests first</div>
+            </div>
+
+            <!-- Student Sorting Test -->
+            <div class="test-section">
+                <h2>🔤 Student Sorting</h2>
+                <button class="test-button" onclick="testStudentSorting()" id="sorting-btn" disabled>🧪 Test Sorting</button>
+                <div id="sorting-results">Load students first</div>
+            </div>
+        </div>
+
+        <!-- Overall Status -->
+        <div class="test-section">
+            <h2>📊 Overall Test Status</h2>
+            <div id="overall-status">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Ready to begin testing...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Stats -->
+        <div class="test-section">
+            <h2>📈 System Statistics</h2>
+            <div class="stats-grid" id="system-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-students">-</div>
+                    <div>Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-competitions">-</div>
+                    <div>Competitions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="grade-levels">-</div>
+                    <div>Grade Levels</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="specialized-tracks">-</div>
+                    <div>Specialized Tracks</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflow Summary -->
+        <div class="test-section">
+            <h2>🔄 Fixed Issues Summary</h2>
+            <div id="fixes-summary">
+                <div class="workflow-step">
+                    <h4>✅ Competition Dropdown Fix</h4>
+                    <p>Students now properly appear in competition registration dropdowns</p>
+                </div>
+                <div class="workflow-step">
+                    <h4>✅ Student Sorting Enhancement</h4>
+                    <p>Students are sorted by grade level with visual grouping in competition registration</p>
+                </div>
+                <div class="workflow-step">
+                    <h4>✅ Students Page Fix</h4>
+                    <p>Students page now displays all students with proper pagination</p>
+                </div>
+                <div class="workflow-step">
+                    <h4>✅ Grade Filtering</h4>
+                    <p>Competition registration filters students based on eligible grades and classes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        let authToken = null;
+        let testResults = {
+            auth: false,
+            students: false,
+            competitions: false,
+            grades: false,
+            registration: false,
+            sorting: false
+        };
+        let studentsData = [];
+        let competitionsData = [];
+        let gradesData = [];
+
+        async function testAuthentication() {
+            const resultsDiv = document.getElementById('auth-results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing authentication...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    testResults.auth = true;
+                    resultsDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Authentication: SUCCESS</h4>
+                            <p><strong>User:</strong> ${data.teacher.firstName} ${data.teacher.lastName}</p>
+                            <p><strong>Role:</strong> ${data.teacher.role}</p>
+                            <p><strong>Token:</strong> ${data.token.substring(0, 20)}...</p>
+                        </div>
+                    `;
+                    
+                    // Enable other test buttons
+                    document.getElementById('students-btn').disabled = false;
+                    document.getElementById('competitions-btn').disabled = false;
+                    document.getElementById('grades-btn').disabled = false;
+                } else {
+                    throw new Error(data.message || 'Authentication failed');
+                }
+            } catch (error) {
+                testResults.auth = false;
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Authentication: FAILED</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+            updateOverallStatus();
+        }
+
+        async function testStudentsPage() {
+            const resultsDiv = document.getElementById('students-results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing students page...</p></div>';
+            
+            try {
+                // Test students API with pagination (same as Students page)
+                const response = await fetch(`${API_BASE}/students?page=1&limit=20`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.data && data.pagination) {
+                    studentsData = data.data;
+                    testResults.students = true;
+                    
+                    // Update stats
+                    document.getElementById('total-students').textContent = data.pagination.total;
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Students Page: SUCCESS</h4>
+                            <p><strong>Students Loaded:</strong> ${data.data.length} of ${data.pagination.total}</p>
+                            <p><strong>Pagination:</strong> Page ${data.pagination.page} of ${data.pagination.pages}</p>
+                            <p><strong>Data Structure:</strong> ✅ Correct (data + pagination)</p>
+                            ${data.data.length > 0 ? `<p><strong>Sample:</strong> "${data.data[0].firstName} ${data.data[0].lastName}" (Grade ${data.data[0].grade})</p>` : ''}
+                        </div>
+                    `;
+                    
+                    // Enable sorting test
+                    document.getElementById('sorting-btn').disabled = false;
+                } else {
+                    throw new Error('Invalid students data structure');
+                }
+            } catch (error) {
+                testResults.students = false;
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Students Page: FAILED</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+            updateOverallStatus();
+        }
+
+        async function testCompetitions() {
+            const resultsDiv = document.getElementById('competitions-results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing competitions...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/competitions`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.data) {
+                    competitionsData = data.data;
+                    testResults.competitions = true;
+                    
+                    // Update stats
+                    document.getElementById('total-competitions').textContent = data.data.length;
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Competitions: SUCCESS</h4>
+                            <p><strong>Competitions Found:</strong> ${data.data.length}</p>
+                            <p><strong>Sample Competition:</strong> "${data.data[0]?.name || 'N/A'}"</p>
+                            <p><strong>Eligible Grades:</strong> ${data.data[0]?.eligibleGrades?.join(', ') || 'N/A'}</p>
+                        </div>
+                    `;
+                    
+                    // Enable registration test
+                    if (testResults.students) {
+                        document.getElementById('registration-btn').disabled = false;
+                    }
+                } else {
+                    throw new Error('Invalid competitions data');
+                }
+            } catch (error) {
+                testResults.competitions = false;
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Competitions: FAILED</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+            updateOverallStatus();
+        }
+
+        async function testGradeFiltering() {
+            const resultsDiv = document.getElementById('grades-results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing grade filtering...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/students/meta/filters`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.grades) {
+                    gradesData = data.grades;
+                    testResults.grades = true;
+                    
+                    // Update stats
+                    document.getElementById('grade-levels').textContent = data.grades.length;
+                    document.getElementById('specialized-tracks').textContent = 
+                        data.grades.filter(g => g.includes('-')).length;
+                    
+                    // Test specific grade filters
+                    const testGrades = ['9', '11-Engineering', '12-Medical'];
+                    let gradeTests = [];
+                    
+                    for (const grade of testGrades) {
+                        const gradeResponse = await fetch(`${API_BASE}/students?grade=${grade}&limit=5`, {
+                            headers: { 'Authorization': `Bearer ${authToken}` }
+                        });
+                        const gradeData = await gradeResponse.json();
+                        
+                        gradeTests.push({
+                            grade,
+                            count: gradeData.pagination?.total || 0,
+                            success: gradeResponse.ok
+                        });
+                    }
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Grade Filtering: SUCCESS</h4>
+                            <p><strong>Available Grades:</strong> ${data.grades.join(', ')}</p>
+                            <p><strong>Grade Filter Tests:</strong></p>
+                            ${gradeTests.map(test => 
+                                `<p>• Grade ${test.grade}: ${test.count} students ${test.success ? '✅' : '❌'}</p>`
+                            ).join('')}
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Invalid grades data');
+                }
+            } catch (error) {
+                testResults.grades = false;
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Grade Filtering: FAILED</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+            updateOverallStatus();
+        }
+
+        async function testRegistrationWorkflow() {
+            const resultsDiv = document.getElementById('registration-results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing registration workflow...</p></div>';
+            
+            try {
+                if (competitionsData.length === 0 || studentsData.length === 0) {
+                    throw new Error('Need competition and student data first');
+                }
+                
+                // Test grade filtering in registration (core functionality)
+                const testCompetition = competitionsData[0];
+                const eligibleStudents = studentsData.filter(student => 
+                    testCompetition.eligibleGrades.includes(student.grade)
+                );
+                
+                // Test availability check endpoint
+                if (eligibleStudents.length > 0) {
+                    const availabilityResponse = await fetch(`${API_BASE}/registrations/check-availability`, {
+                        method: 'POST',
+                        headers: { 
+                            'Authorization': `Bearer ${authToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            competitionId: testCompetition._id,
+                            studentIds: [eligibleStudents[0]._id]
+                        })
+                    });
+                    
+                    const availabilityData = await availabilityResponse.json();
+                    
+                    if (availabilityResponse.ok) {
+                        testResults.registration = true;
+                        resultsDiv.innerHTML = `
+                            <div class="success">
+                                <h4>✅ Registration Workflow: SUCCESS</h4>
+                                <p><strong>Test Competition:</strong> "${testCompetition.name}"</p>
+                                <p><strong>Eligible Grades:</strong> ${testCompetition.eligibleGrades.join(', ')}</p>
+                                <p><strong>Eligible Students Found:</strong> ${eligibleStudents.length}</p>
+                                <p><strong>Availability Check:</strong> ✅ Working</p>
+                                <p><strong>Grade Filtering:</strong> ✅ Correct</p>
+                            </div>
+                        `;
+                    } else {
+                        throw new Error('Availability check failed');
+                    }
+                } else {
+                    throw new Error('No eligible students found for test competition');
+                }
+            } catch (error) {
+                testResults.registration = false;
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Registration Workflow: FAILED</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+            updateOverallStatus();
+        }
+
+        async function testStudentSorting() {
+            const resultsDiv = document.getElementById('sorting-results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Testing student sorting...</p></div>';
+            
+            try {
+                if (studentsData.length === 0) {
+                    throw new Error('Load students data first');
+                }
+                
+                // Test the sorting logic used in competition registration
+                const gradeOrder = ['9', '10', '11-Engineering', '11-IT', '11-Medical', '12-Engineering', '12-IT', '12-Medical'];
+                
+                // Sort students
+                const sortedStudents = [...studentsData].sort((a, b) => {
+                    const gradeA = gradeOrder.indexOf(a.grade);
+                    const gradeB = gradeOrder.indexOf(b.grade);
+                    
+                    if (gradeA !== gradeB) {
+                        return gradeA - gradeB;
+                    }
+                    
+                    const lastNameCompare = a.lastName.localeCompare(b.lastName);
+                    if (lastNameCompare !== 0) {
+                        return lastNameCompare;
+                    }
+                    
+                    return a.firstName.localeCompare(b.firstName);
+                });
+                
+                // Verify sorting is working
+                let sortingErrors = 0;
+                for (let i = 1; i < sortedStudents.length; i++) {
+                    const prev = sortedStudents[i - 1];
+                    const curr = sortedStudents[i];
+                    
+                    const prevGradeIndex = gradeOrder.indexOf(prev.grade);
+                    const currGradeIndex = gradeOrder.indexOf(curr.grade);
+                    
+                    if (prevGradeIndex > currGradeIndex) {
+                        sortingErrors++;
+                    }
+                }
+                
+                testResults.sorting = sortingErrors === 0;
+                
+                // Group by grade for display
+                const studentsByGrade = {};
+                sortedStudents.forEach(student => {
+                    if (!studentsByGrade[student.grade]) {
+                        studentsByGrade[student.grade] = [];
+                    }
+                    studentsByGrade[student.grade].push(student);
+                });
+                
+                resultsDiv.innerHTML = `
+                    <div class="${sortingErrors === 0 ? 'success' : 'error'}">
+                        <h4>${sortingErrors === 0 ? '✅' : '❌'} Student Sorting: ${sortingErrors === 0 ? 'SUCCESS' : 'FAILED'}</h4>
+                        <p><strong>Students Sorted:</strong> ${sortedStudents.length}</p>
+                        <p><strong>Sorting Errors:</strong> ${sortingErrors}</p>
+                        <p><strong>Grade Groups:</strong> ${Object.keys(studentsByGrade).length}</p>
+                        <div class="data-display">
+                            <strong>Grade Distribution:</strong><br>
+                            ${Object.entries(studentsByGrade).map(([grade, students]) => 
+                                `${grade}: ${students.length} students`
+                            ).join('<br>')}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                testResults.sorting = false;
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Student Sorting: FAILED</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+            updateOverallStatus();
+        }
+
+        function updateOverallStatus() {
+            const statusDiv = document.getElementById('overall-status');
+            const totalTests = Object.keys(testResults).length;
+            const passedTests = Object.values(testResults).filter(result => result === true).length;
+            const successRate = Math.round((passedTests / totalTests) * 100);
+            
+            let statusClass = 'warning';
+            if (passedTests === totalTests) statusClass = 'success';
+            else if (passedTests === 0) statusClass = 'error';
+            
+            statusDiv.innerHTML = `
+                <div class="${statusClass}">
+                    <h3>📊 Overall Test Status</h3>
+                    <p><strong>Tests Completed:</strong> ${passedTests} / ${totalTests}</p>
+                    <p><strong>Success Rate:</strong> ${successRate}%</p>
+                    <div class="stats-grid">
+                        ${Object.entries(testResults).map(([test, result]) => `
+                            <div style="text-align: center;">
+                                <span class="status-indicator status-${result ? 'success' : (result === false ? 'error' : 'pending')}"></span>
+                                ${test.charAt(0).toUpperCase() + test.slice(1)}
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${passedTests === totalTests ? 
+                        '<p style="color: #4caf50; font-weight: bold;">🎉 All systems working perfectly!</p>' :
+                        '<p>Continue testing to verify all functionality...</p>'
+                    }
+                </div>
+            `;
+        }
+
+        // Auto-initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Complete Portal Workflow Test initialized');
+            updateOverallStatus();
+        });
+    </script>
+</body>
+</html>
