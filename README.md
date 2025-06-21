@@ -1,11 +1,11 @@
 # 🎓 Qatar Science & Technology Secondary School Portal
 
-[![Deploy Frontend](https://github.com/ahmadtubaishat/qstss-portal/workflows/Deploy%20Frontend%20to%20GitHub%20Pages/badge.svg)](https://github.com/ahmadtubaishat/qstss-portal/actions)
-[![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](https://ahmadtubaishat.github.io/qstss-portal)
+[![Deploy Frontend](https://github.com/ahmadadeltub/qstss-portal/workflows/Deploy%20Frontend%20to%20GitHub%20Pages/badge.svg)](https://github.com/ahmadadeltub/qstss-portal/actions)
+[![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](https://ahmadadeltub.github.io/qstss-portal)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🌐 Live Website
-**🔗 Portal Access:** https://ahmadtubaishat.github.io/qstss-portal
+**🔗 Portal Access:** https://ahmadadeltub.github.io/qstss-portal
 
 ## 👥 For Teachers & Staff
 
@@ -37,7 +37,7 @@
 - **React.js** with TypeScript
 - **Material-UI** for professional design
 - **Hosted on:** GitHub Pages
-- **URL:** https://ahmadtubaishat.github.io/qstss-portal
+- **URL:** https://ahmadadeltub.github.io/qstss-portal
 
 ### Backend
 - **Node.js** with Express
@@ -178,9 +178,9 @@
 
 ## 🌐 Live Access
 
-**Portal URL:** https://ahmadtubaishat.github.io/qstss-portal  
+**Portal URL:** https://ahmadadeltub.github.io/qstss-portal  
 **API Endpoint:** https://qstss-backend-production.up.railway.app/api  
-**Admin Panel:** https://ahmadtubaishat.github.io/qstss-portal/admin  
+**Admin Panel:** https://ahmadadeltub.github.io/qstss-portal/admin  
 
 ---
 
