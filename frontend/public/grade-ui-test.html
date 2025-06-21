@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Filter UI Test - Direct Access</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .grade-link {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 20px;
+            background: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .grade-link:hover {
+            background: #1976D2;
+        }
+        .current-filter {
+            background: #4CAF50;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Direct Grade Filter UI Test</h1>
+        <p>Click the links below to directly access the Students page with specific grade filters applied via URL parameters.</p>
+        
+        <div id="current-filter" class="current-filter">
+            No filter applied
+        </div>
+        
+        <h3>📚 Basic Grades</h3>
+        <a href="/students?grade=9" class="grade-link">📚 Grade 9</a>
+        <a href="/students?grade=10" class="grade-link">📚 Grade 10</a>
+        
+        <h3>🔧 Grade 11 Specializations</h3>
+        <a href="/students?grade=11-Engineering" class="grade-link">🔧 Grade 11 - Engineering</a>
+        <a href="/students?grade=11-IT" class="grade-link">💻 Grade 11 - IT</a>
+        <a href="/students?grade=11-Medical" class="grade-link">🏥 Grade 11 - Medical</a>
+        
+        <h3>🎓 Grade 12 Specializations</h3>
+        <a href="/students?grade=12-Engineering" class="grade-link">🔧 Grade 12 - Engineering</a>
+        <a href="/students?grade=12-IT" class="grade-link">💻 Grade 12 - IT</a>
+        <a href="/students?grade=12-Medical" class="grade-link">🏥 Grade 12 - Medical</a>
+        
+        <h3>🌟 All Students</h3>
+        <a href="/students" class="grade-link">🌟 All Grades</a>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 5px;">
+            <h4>📋 What to Check:</h4>
+            <ol>
+                <li>Click each grade filter link above</li>
+                <li>Verify the Students page loads with the correct filter applied</li>
+                <li>Check that the grade dropdown shows the selected grade</li>
+                <li>Verify students are filtered correctly</li>
+                <li>Look for any console errors in browser dev tools</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Check current URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentGrade = urlParams.get('grade');
+        const currentFilterDiv = document.getElementById('current-filter');
+        
+        if (currentGrade) {
+            currentFilterDiv.innerHTML = `Current filter: Grade ${currentGrade}`;
+            currentFilterDiv.style.background = '#4CAF50';
+        } else {
+            currentFilterDiv.innerHTML = 'No filter applied (showing all grades)';
+            currentFilterDiv.style.background = '#9E9E9E';
+        }
+    </script>
+</body>
+</html>

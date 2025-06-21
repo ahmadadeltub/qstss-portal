@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students Page Test - Qatar STSS</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 12px;
+            border-left: 5px solid #007cba;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: linear-gradient(135deg, #007cba 0%, #005a87 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,123,186,0.3);
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,123,186,0.4);
+        }
+        .test-result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .success-result {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error-result {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .emoji {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Qatar STSS Students Directory Test Suite</h1>
+            <p>Comprehensive testing for the enhanced Students page with grade filters and professional design</p>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="emoji">🔧</span>Technical Features Verification</h2>
+            <p><strong>Testing:</strong> API connectivity, grade filters, student display, pagination, and user interface</p>
+            
+            <button class="test-button" onclick="testLogin()">🔐 Test Authentication</button>
+            <button class="test-button" onclick="testStudentsAPI()">📡 Test Students API</button>
+            <button class="test-button" onclick="testGradeFilters()">🎯 Test Grade Filters</button>
+            <button class="test-button" onclick="testSpecializedGrades()">🏥 Test Specialized Grades</button>
+            <button class="test-button" onclick="testPagination()">📄 Test Pagination</button>
+            <button class="test-button" onclick="testSearch()">🔍 Test Search Function</button>
+            
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="emoji">📊</span>Database Statistics</h2>
+            <div class="stats" id="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-students">--</div>
+                    <div>Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="grade-levels">--</div>
+                    <div>Grade Levels</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="class-sections">--</div>
+                    <div>Class Sections</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="specialized-tracks">--</div>
+                    <div>Specialized Tracks</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="emoji">🎓</span>Grade Level Breakdown</h2>
+            <p>Expected grade levels in the Qatar STSS system:</p>
+            <div id="grade-breakdown">
+                <div><strong>📚 Basic Grades:</strong> Grade 9, Grade 10</div>
+                <div><strong>🔧 Grade 11 Specializations:</strong> Engineering, Information Technology, Medical Sciences</div>
+                <div><strong>🎯 Grade 12 Specializations:</strong> Engineering, Information Technology, Medical Sciences</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="emoji">🚀</span>Quick Access</h2>
+            <button class="test-button" onclick="window.open('http://localhost:3001/students', '_blank')">
+                🎓 Open Students Directory
+            </button>
+            <button class="test-button" onclick="window.open('http://localhost:3001/admin', '_blank')">
+                👨‍💼 Open Admin Panel
+            </button>
+            <button class="test-button" onclick="runAllTests()">
+                🧪 Run All Tests
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let token = '';
+        const API_BASE = 'http://localhost:4000/api';
+        const resultsDiv = document.getElementById('test-results');
+
+        function addResult(message, isSuccess = true, isLoading = false) {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${isLoading ? 'loading' : (isSuccess ? 'success-result' : 'error-result')}`;
+            resultDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            resultsDiv.appendChild(resultDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        async function testLogin() {
+            clearResults();
+            addResult('🔐 Testing authentication system...', true, true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    token = data.token;
+                    addResult(`✅ Authentication: SUCCESS\\n   Welcome: ${data.teacher.firstName} ${data.teacher.lastName}\\n   Role: ${data.teacher.role}`, true);
+                } else {
+                    addResult(`❌ Authentication: FAILED (${response.status})\\n   Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                addResult(`❌ Authentication: ERROR - ${error.message}`, false);
+            }
+        }
+
+        async function testStudentsAPI() {
+            if (!token) {
+                addResult('❌ Please login first!', false);
+                return;
+            }
+            
+            addResult('📡 Testing Students API endpoints...', true, true);
+            
+            try {
+                // Test main students endpoint
+                const response = await fetch(`${API_BASE}/students?page=1&limit=5`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Students API: SUCCESS\\n   Retrieved: ${data.data.length} students\\n   Total in database: ${data.pagination.total}\\n   Pages available: ${data.pagination.pages}`, true);
+                    
+                    // Update stats
+                    document.getElementById('total-students').textContent = data.pagination.total;
+                    
+                    if (data.data.length > 0) {
+                        const sampleStudent = data.data[0];
+                        addResult(`📋 Sample Student: ${sampleStudent.firstName} ${sampleStudent.lastName}\\n   Grade: ${sampleStudent.grade}, Class: ${sampleStudent.class}\\n   ID: ${sampleStudent.studentId}`, true);
+                    }
+                } else {
+                    addResult(`❌ Students API: FAILED (${response.status})\\n   Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                addResult(`❌ Students API: ERROR - ${error.message}`, false);
+            }
+        }
+
+        async function testGradeFilters() {
+            if (!token) {
+                addResult('❌ Please login first!', false);
+                return;
+            }
+            
+            addResult('🎯 Testing grade filter system...', true, true);
+            
+            try {
+                // Test filters endpoint
+                const response = await fetch(`${API_BASE}/students/meta/filters`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const grades = data.grades || [];
+                    const classes = data.classes || [];
+                    
+                    addResult(`✅ Grade Filters: SUCCESS\\n   Available grades: ${grades.join(', ')}\\n   Total grade levels: ${grades.length}\\n   Total class sections: ${classes.length}`, true);
+                    
+                    // Update stats
+                    document.getElementById('grade-levels').textContent = grades.length;
+                    document.getElementById('class-sections').textContent = classes.length;
+                    
+                    // Count specialized tracks
+                    const specializedTracks = grades.filter(g => g.includes('-')).length;
+                    document.getElementById('specialized-tracks').textContent = specializedTracks;
+                    
+                    // Test specific grade filter
+                    const testGrade = '9';
+                    const gradeResponse = await fetch(`${API_BASE}/students?grade=${testGrade}&limit=3`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const gradeData = await gradeResponse.json();
+                    if (gradeResponse.ok) {
+                        addResult(`🎯 Grade ${testGrade} Filter: ${gradeData.pagination.total} students found`, true);
+                    }
+                } else {
+                    addResult(`❌ Grade Filters: FAILED (${response.status})`, false);
+                }
+            } catch (error) {
+                addResult(`❌ Grade Filters: ERROR - ${error.message}`, false);
+            }
+        }
+
+        async function testSpecializedGrades() {
+            if (!token) {
+                addResult('❌ Please login first!', false);
+                return;
+            }
+            
+            addResult('🏥 Testing specialized grade tracks...', true, true);
+            
+            const specializedGrades = [
+                '11-Engineering', '11-IT', '11-Medical',
+                '12-Engineering', '12-IT', '12-Medical'
+            ];
+            
+            try {
+                for (const grade of specializedGrades) {
+                    const response = await fetch(`${API_BASE}/students?grade=${grade}&limit=1`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        const count = data.pagination.total;
+                        const icon = grade.includes('Engineering') ? '🔧' : grade.includes('IT') ? '💻' : '🏥';
+                        addResult(`${icon} ${grade}: ${count} students`, count > 0);
+                    }
+                }
+            } catch (error) {
+                addResult(`❌ Specialized Grades Test: ERROR - ${error.message}`, false);
+            }
+        }
+
+        async function testPagination() {
+            if (!token) {
+                addResult('❌ Please login first!', false);
+                return;
+            }
+            
+            addResult('📄 Testing pagination system...', true, true);
+            
+            try {
+                // Test page 1
+                const page1 = await fetch(`${API_BASE}/students?page=1&limit=10`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data1 = await page1.json();
+                
+                if (page1.ok) {
+                    addResult(`📄 Page 1: ${data1.data.length} students retrieved`, true);
+                    
+                    // Test page 2 if available
+                    if (data1.pagination.pages > 1) {
+                        const page2 = await fetch(`${API_BASE}/students?page=2&limit=10`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const data2 = await page2.json();
+                        
+                        if (page2.ok) {
+                            addResult(`📄 Page 2: ${data2.data.length} students retrieved\\n   Pagination working correctly`, true);
+                        }
+                    } else {
+                        addResult(`📄 Only one page of students available`, true);
+                    }
+                }
+            } catch (error) {
+                addResult(`❌ Pagination Test: ERROR - ${error.message}`, false);
+            }
+        }
+
+        async function testSearch() {
+            if (!token) {
+                addResult('❌ Please login first!', false);
+                return;
+            }
+            
+            addResult('🔍 Testing search functionality...', true, true);
+            
+            try {
+                // Test search by name
+                const searchResponse = await fetch(`${API_BASE}/students?search=AHMED&limit=5`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const searchData = await searchResponse.json();
+                
+                if (searchResponse.ok) {
+                    addResult(`🔍 Search "AHMED": ${searchData.pagination.total} students found`, true);
+                    
+                    if (searchData.data.length > 0) {
+                        const student = searchData.data[0];
+                        addResult(`   First result: ${student.firstName} ${student.lastName}`, true);
+                    }
+                } else {
+                    addResult(`❌ Search Test: FAILED`, false);
+                }
+            } catch (error) {
+                addResult(`❌ Search Test: ERROR - ${error.message}`, false);
+            }
+        }
+
+        async function runAllTests() {
+            clearResults();
+            addResult('🧪 Running comprehensive test suite...', true, true);
+            
+            await testLogin();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testStudentsAPI();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testGradeFilters();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testSpecializedGrades();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testPagination();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testSearch();
+            
+            addResult('\\n🎉 All tests completed! Check results above.', true);
+        }
+
+        // Auto-run basic tests on load
+        window.addEventListener('load', () => {
+            setTimeout(testLogin, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React App Login Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .login-form {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: rgba(76, 175, 80, 0.2); border-left: 5px solid #4CAF50; }
+        .error { background: rgba(244, 67, 54, 0.2); border-left: 5px solid #f44336; }
+        .info { background: rgba(33, 150, 243, 0.2); border-left: 5px solid #2196F3; }
+        .links {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .links a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            transition: background 0.3s;
+        }
+        .links a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 Qatar STSS Portal Login</h1>
+        
+        <div class="login-form">
+            <h3>Login to Access Competitions</h3>
+            <input type="email" id="email" placeholder="Email" value="admin@qstss.edu.qa">
+            <input type="password" id="password" placeholder="Password" value="admin123">
+            <button onclick="performLogin()">Login to Portal</button>
+            <button onclick="testLoginAPI()">Test API Login</button>
+            <button onclick="clearStorage()">Clear Storage</button>
+        </div>
+
+        <div id="status"></div>
+
+        <div class="links">
+            <a href="http://localhost:3001" target="_blank">🏠 Open React App</a>
+            <a href="http://localhost:3001/login" target="_blank">🔐 Login Page</a>
+            <a href="http://localhost:3001/competitions" target="_blank">🏆 Competitions</a>
+            <a href="http://localhost:3001/debug" target="_blank">🔧 Debug Page</a>
+        </div>
+
+        <div class="info status">
+            <strong>Instructions:</strong><br>
+            1. Click "Login to Portal" to authenticate<br>
+            2. Open the React app and navigate to competitions<br>
+            3. You should now see competitions listed<br><br>
+            <strong>Demo Credentials:</strong><br>
+            Email: admin@qstss.edu.qa<br>
+            Password: admin123
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="${type} status">${message}</div>`;
+        }
+
+        async function performLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            updateStatus('🔄 Logging in...', 'info');
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store authentication data in localStorage (same as React app)
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.teacher));
+
+                    updateStatus(`✅ <strong>Login Successful!</strong><br>
+                        Welcome ${data.teacher.firstName} ${data.teacher.lastName}<br>
+                        Role: ${data.teacher.role}<br>
+                        You can now access the React app and view competitions.<br>
+                        <a href="http://localhost:3001/competitions" target="_blank" style="color: #4CAF50; text-decoration: underline;">Click here to open competitions page</a>`, 'success');
+                } else {
+                    updateStatus(`❌ <strong>Login Failed:</strong><br>${data.message || 'Invalid credentials'}`, 'error');
+                }
+            } catch (error) {
+                updateStatus(`❌ <strong>Login Error:</strong><br>${error.message}`, 'error');
+            }
+        }
+
+        async function testLoginAPI() {
+            updateStatus('🧪 Testing API connection...', 'info');
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'admin@qstss.edu.qa', 
+                        password: 'admin123' 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateStatus(`✅ <strong>API Test Successful!</strong><br>
+                        Server is responding correctly.<br>
+                        Status: ${response.status}<br>
+                        Token received: ${data.token ? 'Yes' : 'No'}`, 'success');
+                } else {
+                    updateStatus(`❌ <strong>API Test Failed:</strong><br>
+                        Status: ${response.status}<br>
+                        Message: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                updateStatus(`❌ <strong>API Connection Error:</strong><br>
+                    Cannot reach backend server.<br>
+                    Error: ${error.message}<br>
+                    Make sure backend is running on port 5000.`, 'error');
+            }
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            updateStatus('🗑️ <strong>Storage Cleared</strong><br>All authentication data removed.', 'info');
+        }
+
+        // Check authentication status on load
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                const userData = JSON.parse(user);
+                updateStatus(`ℹ️ <strong>Already Authenticated</strong><br>
+                    User: ${userData.firstName} ${userData.lastName}<br>
+                    Role: ${userData.role}<br>
+                    You can access the React app directly.`, 'success');
+            } else {
+                updateStatus('ℹ️ <strong>Not Authenticated</strong><br>Please login to access the portal.', 'info');
+            }
+        };
+    </script>
+</body>
+</html>

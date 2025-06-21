@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Qatar STSS Teacher Portal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            color: #800020;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #e2e3e5; border-color: #d6d8db; }
+        button {
+            background-color: #800020;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #600018; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏫 Qatar Science & Technology Secondary School</h1>
+            <h2>Teacher Portal API Test</h2>
+        </div>
+
+        <div class="test-section info">
+            <h3>Test Instructions</h3>
+            <p>This page will test the API endpoints to diagnose any issues with the competition system.</p>
+            <button onclick="runAllTests()">🧪 Run All Tests</button>
+            <button onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+
+        <div class="test-section" id="auth-test">
+            <h3>1. Authentication Test</h3>
+            <button onclick="testAuth()">Test Login</button>
+            <div id="auth-result"></div>
+        </div>
+
+        <div class="test-section" id="competitions-test">
+            <h3>2. Competitions API Test</h3>
+            <button onclick="testCompetitions()">Test Competitions</button>
+            <div id="competitions-result"></div>
+        </div>
+
+        <div class="test-section" id="students-test">
+            <h3>3. Students API Test</h3>
+            <button onclick="testStudents()">Test Students</button>
+            <div id="students-result"></div>
+        </div>
+
+        <div class="test-section" id="create-test">
+            <h3>4. Create Competition Test</h3>
+            <button onclick="testCreateCompetition()">Test Create Competition</button>
+            <div id="create-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(`http://localhost:5000/api${url}`, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
+                        ...options.headers
+                    }
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, status: response.status, data };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testAuth() {
+            const result = document.getElementById('auth-result');
+            result.innerHTML = '<p>🔄 Testing authentication...</p>';
+            
+            const response = await apiCall('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: 'admin@qstss.edu.qa',
+                    password: 'admin123'
+                })
+            });
+
+            if (response.success) {
+                authToken = response.data.token;
+                result.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Authentication Successful</h4>
+                        <p><strong>User:</strong> ${response.data.teacher.firstName} ${response.data.teacher.lastName}</p>
+                        <p><strong>Role:</strong> ${response.data.teacher.role}</p>
+                        <p><strong>Email:</strong> ${response.data.teacher.email}</p>
+                        <details>
+                            <summary>Token (click to expand)</summary>
+                            <pre>${authToken.substring(0, 50)}...</pre>
+                        </details>
+                    </div>
+                `;
+            } else {
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Authentication Failed</h4>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function testCompetitions() {
+            const result = document.getElementById('competitions-result');
+            result.innerHTML = '<p>🔄 Testing competitions API...</p>';
+            
+            if (!authToken) {
+                result.innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+
+            const response = await apiCall('/competitions');
+
+            if (response.success) {
+                const competitions = response.data.competitions || response.data.data || response.data;
+                result.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Competitions API Working</h4>
+                        <p><strong>Total Competitions:</strong> ${Array.isArray(competitions) ? competitions.length : 'Not an array'}</p>
+                        <p><strong>Response Structure:</strong> ${Object.keys(response.data).join(', ')}</p>
+                        ${Array.isArray(competitions) && competitions.length > 0 ? `
+                            <details>
+                                <summary>First Competition Sample</summary>
+                                <pre>${JSON.stringify(competitions[0], null, 2)}</pre>
+                            </details>
+                        ` : '<p>No competitions found</p>'}
+                    </div>
+                `;
+            } else {
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Competitions API Failed</h4>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function testStudents() {
+            const result = document.getElementById('students-result');
+            result.innerHTML = '<p>🔄 Testing students API...</p>';
+            
+            if (!authToken) {
+                result.innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+
+            const response = await apiCall('/students?limit=5');
+
+            if (response.success) {
+                const students = response.data.students || response.data.data || response.data;
+                result.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Students API Working</h4>
+                        <p><strong>Students Found:</strong> ${Array.isArray(students) ? students.length : 'Not an array'}</p>
+                        <p><strong>Response Structure:</strong> ${Object.keys(response.data).join(', ')}</p>
+                        ${Array.isArray(students) && students.length > 0 ? `
+                            <details>
+                                <summary>First Student Sample</summary>
+                                <pre>${JSON.stringify(students[0], null, 2)}</pre>
+                            </details>
+                        ` : '<p>No students found</p>'}
+                    </div>
+                `;
+            } else {
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Students API Failed</h4>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function testCreateCompetition() {
+            const result = document.getElementById('create-result');
+            result.innerHTML = '<p>🔄 Testing competition creation...</p>';
+            
+            if (!authToken) {
+                result.innerHTML = '<div class="error">❌ Please authenticate first</div>';
+                return;
+            }
+
+            const competitionData = {
+                name: `API Test Competition ${Date.now()}`,
+                description: 'This is a test competition created via API test',
+                category: 'Technology',
+                maxParticipants: 25,
+                maxStudentsPerTeacher: 4,
+                startDate: '2025-08-01',
+                endDate: '2025-08-02',
+                registrationDeadline: '2025-07-25',
+                eligibleGrades: ['10', '11', '12'],
+                venue: 'Test Venue',
+                rules: 'Test rules',
+                organizerName: 'API Test',
+                country: 'Qatar',
+                participantCount: 0
+            };
+
+            const createResponse = await apiCall('/competitions', {
+                method: 'POST',
+                body: JSON.stringify(competitionData)
+            });
+
+            if (createResponse.success) {
+                // Test if it appears in the list
+                const listResponse = await apiCall('/competitions');
+                const competitions = listResponse.data.competitions || listResponse.data.data || listResponse.data;
+                
+                result.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Competition Creation Successful</h4>
+                        <p><strong>Created Competition:</strong> ${createResponse.data.competition?.name}</p>
+                        <p><strong>Competition ID:</strong> ${createResponse.data.competition?._id}</p>
+                        <p><strong>Total Competitions Now:</strong> ${Array.isArray(competitions) ? competitions.length : 'Unknown'}</p>
+                        <details>
+                            <summary>Created Competition Details</summary>
+                            <pre>${JSON.stringify(createResponse.data.competition, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            } else {
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Competition Creation Failed</h4>
+                        <pre>${JSON.stringify(createResponse, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function runAllTests() {
+            await testAuth();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testCompetitions();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testStudents();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testCreateCompetition();
+        }
+
+        function clearResults() {
+            document.querySelectorAll('[id$="-result"]').forEach(el => el.innerHTML = '');
+            authToken = null;
+        }
+    </script>
+</body>
+</html>

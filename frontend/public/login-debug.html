@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Debug Test</title>
+</head>
+<body>
+    <h1>Login Debug Test</h1>
+    <form id="loginForm">
+        <div>
+            <label>Email: <input type="email" id="email" value="admin@qstss.edu.qa" /></label>
+        </div>
+        <div>
+            <label>Password: <input type="password" id="password" value="admin123" /></label>
+        </div>
+        <button type="submit">Test Login</button>
+    </form>
+    <div id="result" style="margin-top: 20px;"></div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '<p>Testing login...</p>';
+            
+            try {
+                // Test using fetch (same as what React would use)
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p style="color: green;">✅ LOGIN SUCCESSFUL!</p>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                        <p><strong>Token:</strong> ${data.token.substring(0, 50)}...</p>
+                        <p><strong>User:</strong> ${data.teacher.firstName} ${data.teacher.lastName} (${data.teacher.role})</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p style="color: red;">❌ LOGIN FAILED</p>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Network error:', error);
+                resultDiv.innerHTML = `
+                    <p style="color: red;">❌ NETWORK ERROR</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Check the browser console for details.</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

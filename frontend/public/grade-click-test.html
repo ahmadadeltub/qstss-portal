@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Filter Click Test - QSTSS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        .test-button {
+            display: inline-block;
+            padding: 12px 20px;
+            margin: 10px;
+            background: rgba(76, 175, 80, 0.8);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            background: rgba(76, 175, 80, 1);
+            transform: translateY(-2px);
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Grade Filter Click Test</h1>
+        <p>Testing click functionality for grade 11 and 12 filters</p>
+        
+        <div>
+            <button class="test-button" onclick="testGradeFilter('9')">📚 Test Grade 9</button>
+            <button class="test-button" onclick="testGradeFilter('10')">📚 Test Grade 10</button>
+            <button class="test-button" onclick="testGradeFilter('11-Engineering')">🔧 Test Grade 11-Engineering</button>
+            <button class="test-button" onclick="testGradeFilter('11-IT')">💻 Test Grade 11-IT</button>
+            <button class="test-button" onclick="testGradeFilter('11-Medical')">🏥 Test Grade 11-Medical</button>
+            <button class="test-button" onclick="testGradeFilter('12-Engineering')">🔧 Test Grade 12-Engineering</button>
+            <button class="test-button" onclick="testGradeFilter('12-IT')">💻 Test Grade 12-IT</button>
+            <button class="test-button" onclick="testGradeFilter('12-Medical')">🏥 Test Grade 12-Medical</button>
+        </div>
+        
+        <div id="results"></div>
+        
+        <div style="margin-top: 30px;">
+            <h3>📋 Instructions:</h3>
+            <p>1. Click each grade filter button above</p>
+            <p>2. Check if the API call succeeds and returns students</p>
+            <p>3. Grade 9 and 10 should work (basic grades)</p>
+            <p>4. Grade 11 and 12 specialized tracks should also work</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        let token = null;
+
+        // Get authentication token
+        async function getToken() {
+            if (token) return token;
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    token = data.token;
+                    return token;
+                }
+                throw new Error('Authentication failed');
+            } catch (error) {
+                throw new Error(`Auth error: ${error.message}`);
+            }
+        }
+
+        // Test grade filter
+        async function testGradeFilter(grade) {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                const authToken = await getToken();
+                
+                const response = await fetch(`${API_BASE}/students?grade=${grade}&limit=5`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                const resultDiv = document.createElement('div');
+                resultDiv.className = response.ok ? 'result' : 'result error';
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <strong>✅ ${grade} Filter: SUCCESS</strong><br>
+                        Found: ${data.pagination.total} students<br>
+                        Showing: ${data.data.length} students<br>
+                        Status: ${response.status} ${response.statusText}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <strong>❌ ${grade} Filter: FAILED</strong><br>
+                        Error: ${data.message || 'Unknown error'}<br>
+                        Status: ${response.status} ${response.statusText}
+                    `;
+                }
+                
+                resultsDiv.appendChild(resultDiv);
+                
+            } catch (error) {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ ${grade} Filter: ERROR</strong><br>
+                    ${error.message}
+                `;
+                resultsDiv.appendChild(resultDiv);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Grade Click Test initialized');
+        });
+    </script>
+</body>
+</html>

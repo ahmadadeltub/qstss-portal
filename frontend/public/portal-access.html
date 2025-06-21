@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qatar STSS - Teacher Portal Access</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Apple System', 'SF Pro Display', sans-serif;
+            background: linear-gradient(135deg, #1976d2 0%, #42a5f5 50%, #2196f3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .portal-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .portal-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .portal-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .portal-title {
+            color: #1565c0;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .portal-subtitle {
+            color: #5f6368;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .access-section {
+            margin-bottom: 32px;
+        }
+        
+        .access-title {
+            color: #1976d2;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .form-label {
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .form-input {
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+        }
+        
+        .portal-button {
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .portal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(25, 118, 210, 0.3);
+        }
+        
+        .portal-button:active {
+            transform: translateY(0);
+        }
+        
+        .portal-button.secondary {
+            background: rgba(25, 118, 210, 0.1);
+            color: #1976d2;
+            border: 2px solid #1976d2;
+        }
+        
+        .quick-access {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .quick-link {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .quick-link:hover {
+            border-color: #1976d2;
+            color: #1976d2;
+            background: rgba(25, 118, 210, 0.05);
+        }
+        
+        .status-card {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            border-left: 4px solid;
+        }
+        
+        .status-info {
+            background: #eff6ff;
+            border-left-color: #3b82f6;
+            color: #1e40af;
+        }
+        
+        .status-success {
+            background: #f0fdf4;
+            border-left-color: #22c55e;
+            color: #15803d;
+        }
+        
+        .status-error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+            color: #dc2626;
+        }
+        
+        .credentials-note {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+        
+        .credentials-title {
+            color: #475569;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .credentials-item {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            color: #1976d2;
+            font-size: 13px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 4px 0;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="portal-container">
+        <div class="portal-header">
+            <div class="portal-logo">🏆</div>
+            <h1 class="portal-title">Teacher Portal</h1>
+            <p class="portal-subtitle">Qatar Science & Technology Secondary School for Boys<br>Competition Management System</p>
+        </div>
+
+        <div class="access-section">
+            <h2 class="access-title">🔐 Portal Access</h2>
+            
+            <div class="login-form">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="email" value="admin@qstss.edu.qa" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="password" value="admin123" placeholder="Enter your password">
+                </div>
+                <button class="portal-button" onclick="performLogin()">🚀 Login to Portal</button>
+            </div>
+
+            <div class="quick-access">
+                <a href="http://localhost:3001" class="quick-link" target="_blank">🏠 Open Portal</a>
+                <a href="http://localhost:3001/login" class="quick-link" target="_blank">📝 Login Page</a>
+                <a href="http://localhost:3001/competitions" class="quick-link" target="_blank">🏆 Competitions</a>
+                <a href="javascript:void(0)" class="quick-link" onclick="testConnection()">🔍 Test Connection</a>
+            </div>
+        </div>
+
+        <div id="statusArea"></div>
+
+        <div class="credentials-note">
+            <div class="credentials-title">📋 Demo Credentials</div>
+            <div class="credentials-item"><strong>Admin:</strong> admin@qstss.edu.qa / admin123</div>
+            <div class="credentials-item"><strong>Teacher:</strong> john.smith@qstss.edu.qa / teacher123</div>
+        </div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusArea = document.getElementById('statusArea');
+            statusArea.innerHTML = `<div class="status-card status-${type}">${message}</div>`;
+        }
+
+        async function performLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showStatus('❌ Please enter both email and password', 'error');
+                return;
+            }
+
+            showStatus('🔄 Authenticating...', 'info');
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store authentication data
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.teacher));
+
+                    showStatus(`✅ <strong>Login Successful!</strong><br>
+                        Welcome ${data.teacher.firstName} ${data.teacher.lastName}<br>
+                        Role: ${data.teacher.role}<br>
+                        <a href="http://localhost:3001" target="_blank" style="color: #1976d2; text-decoration: underline;">🚀 Open Portal Now</a>`, 'success');
+                } else {
+                    showStatus(`❌ <strong>Login Failed</strong><br>${data.message || 'Invalid credentials'}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ <strong>Connection Error</strong><br>Cannot reach the server. Please ensure:<br>
+                    • Backend server is running on port 5000<br>
+                    • Frontend server is running on port 3001<br>
+                    • No firewall is blocking the connections`, 'error');
+            }
+        }
+
+        async function testConnection() {
+            showStatus('🧪 Testing server connections...', 'info');
+
+            try {
+                // Test backend
+                const backendResponse = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'test', password: 'test' })
+                });
+
+                // Test frontend
+                const frontendResponse = await fetch('http://localhost:3001');
+
+                if (backendResponse.status && frontendResponse.status) {
+                    showStatus(`✅ <strong>Connection Test Successful!</strong><br>
+                        ✓ Backend server: Running (Port 5000)<br>
+                        ✓ Frontend server: Running (Port 3001)<br>
+                        ✓ API communication: Working<br>
+                        <strong>You can now use the portal!</strong>`, 'success');
+                } else {
+                    showStatus('⚠️ Partial connection issues detected', 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ <strong>Connection Test Failed</strong><br>
+                    Error: ${error.message}<br>
+                    Please check that both servers are running.`, 'error');
+            }
+        }
+
+        // Check authentication status on load
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                try {
+                    const userData = JSON.parse(user);
+                    showStatus(`ℹ️ <strong>Already Authenticated</strong><br>
+                        User: ${userData.firstName} ${userData.lastName}<br>
+                        Role: ${userData.role}<br>
+                        <a href="http://localhost:3001" target="_blank" style="color: #1976d2; text-decoration: underline;">🚀 Open Portal</a>`, 'success');
+                } catch (e) {
+                    showStatus('ℹ️ Please login to access the portal', 'info');
+                }
+            } else {
+                showStatus('ℹ️ Please login to access the portal', 'info');
+            }
+        };
+
+        // Handle enter key
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performLogin();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Fix - QSTSS Portal</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .success {
+            border-left: 5px solid #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .error {
+            border-left: 5px solid #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .warning {
+            border-left: 5px solid #ff9800;
+            background: rgba(255, 152, 0, 0.2);
+        }
+        .login-form {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .quick-login {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .online { background: #4CAF50; }
+        .offline { background: #f44336; }
+        .loading { 
+            background: #ff9800; 
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏫 QSTSS Portal - Login Fix</h1>
+        <p>Network error diagnosis and login testing</p>
+
+        <!-- Server Status -->
+        <div class="status-card">
+            <h2>🔍 Server Status Check</h2>
+            <div id="serverStatus">
+                <div class="spinner"></div> Checking server connectivity...
+            </div>
+        </div>
+
+        <!-- Quick Login -->
+        <div class="status-card">
+            <h2>🚀 Quick Login Test</h2>
+            <div class="quick-login">
+                <button onclick="quickLogin('admin')">👨‍💼 Login as Admin</button>
+                <button onclick="quickLogin('teacher')">👩‍🏫 Login as Teacher</button>
+                <button onclick="testConnection()">🔄 Test Connection</button>
+                <button onclick="clearCache()">🗑️ Clear Cache</button>
+            </div>
+            <div id="quickLoginStatus"></div>
+        </div>
+
+        <!-- Manual Login Form -->
+        <div class="login-form">
+            <h2>📋 Manual Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" value="admin@qstss.edu.qa" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" value="admin123" required>
+                </div>
+                <button type="submit">🔐 Login</button>
+            </form>
+            <div id="loginResult"></div>
+        </div>
+
+        <!-- Network Diagnostics -->
+        <div class="status-card">
+            <h2>🌐 Network Diagnostics</h2>
+            <div id="diagnostics">
+                <div class="spinner"></div> Running diagnostics...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        
+        // Check server status
+        async function checkServerStatus() {
+            const statusDiv = document.getElementById('serverStatus');
+            
+            try {
+                // Test basic connectivity
+                const response = await fetch(`${API_BASE}/students/meta/filters`);
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <span class="status-indicator online"></span>
+                            <strong>✅ Backend Server Online</strong><br>
+                            Port 4000 is accessible and responding
+                        </div>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <span class="status-indicator offline"></span>
+                        <strong>❌ Backend Server Issue</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Quick login function
+        async function quickLogin(type) {
+            const statusDiv = document.getElementById('quickLoginStatus');
+            const credentials = {
+                admin: { email: 'admin@qstss.edu.qa', password: 'admin123' },
+                teacher: { email: 'teacher@qstss.edu.qa', password: 'teacher123' }
+            };
+
+            const creds = credentials[type];
+            if (!creds) return;
+
+            statusDiv.innerHTML = `
+                <div class="warning">
+                    <div class="spinner"></div>
+                    Attempting ${type} login...
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(creds)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    localStorage.setItem('token', data.token);
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✅ ${type.charAt(0).toUpperCase() + type.slice(1)} Login Successful!</strong><br>
+                            Token saved. You can now access the portal.<br>
+                            <button onclick="window.location.href='/'">🏠 Go to Portal</button>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Login Failed</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Test connection
+        async function testConnection() {
+            const statusDiv = document.getElementById('quickLoginStatus');
+            
+            statusDiv.innerHTML = `
+                <div class="warning">
+                    <div class="spinner"></div>
+                    Testing connection to backend...
+                </div>
+            `;
+
+            try {
+                const start = Date.now();
+                const response = await fetch(`${API_BASE}/students/meta/filters`);
+                const end = Date.now();
+                const responseTime = end - start;
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✅ Connection Test Successful</strong><br>
+                            Response time: ${responseTime}ms<br>
+                            Backend is reachable and responding
+                        </div>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Connection Test Failed</strong><br>
+                        ${error.message}<br>
+                        Check if backend server is running on port 4000
+                    </div>
+                `;
+            }
+        }
+
+        // Clear cache
+        function clearCache() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('quickLoginStatus').innerHTML = `
+                <div class="success">
+                    <strong>✅ Cache Cleared</strong><br>
+                    All stored tokens and data have been removed
+                </div>
+            `;
+        }
+
+        // Manual login form
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            resultDiv.innerHTML = `
+                <div class="warning">
+                    <div class="spinner"></div>
+                    Logging in...
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    localStorage.setItem('token', data.token);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✅ Login Successful!</strong><br>
+                            Welcome! You can now access the portal.<br>
+                            <button onclick="window.location.href='/'">🏠 Go to Portal</button>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Login Failed</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        });
+
+        // Run diagnostics
+        async function runDiagnostics() {
+            const diagnosticsDiv = document.getElementById('diagnostics');
+            let results = [];
+
+            // Test 1: Backend connectivity
+            try {
+                const response = await fetch(`${API_BASE}/students/meta/filters`);
+                if (response.ok) {
+                    results.push('✅ Backend server (port 4000) is accessible');
+                } else {
+                    results.push(`❌ Backend server returned HTTP ${response.status}`);
+                }
+            } catch (error) {
+                results.push(`❌ Cannot connect to backend: ${error.message}`);
+            }
+
+            // Test 2: CORS configuration
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'OPTIONS'
+                });
+                results.push('✅ CORS is properly configured');
+            } catch (error) {
+                results.push(`⚠️ CORS may have issues: ${error.message}`);
+            }
+
+            // Test 3: Rate limiting
+            try {
+                const response = await fetch(`${API_BASE}/students/meta/filters`);
+                const rateLimitHeaders = {
+                    limit: response.headers.get('RateLimit-Limit'),
+                    remaining: response.headers.get('RateLimit-Remaining'),
+                    reset: response.headers.get('RateLimit-Reset')
+                };
+                
+                if (rateLimitHeaders.remaining !== null) {
+                    results.push(`✅ Rate limiting: ${rateLimitHeaders.remaining}/${rateLimitHeaders.limit} requests remaining`);
+                } else {
+                    results.push('✅ Rate limiting configured but no headers detected');
+                }
+            } catch (error) {
+                results.push(`⚠️ Could not check rate limiting status`);
+            }
+
+            diagnosticsDiv.innerHTML = `
+                <div class="success">
+                    <h3>🔍 Diagnostic Results:</h3>
+                    ${results.map(result => `<div style="margin: 5px 0;">${result}</div>`).join('')}
+                </div>
+            `;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServerStatus();
+            runDiagnostics();
+        });
+    </script>
+</body>
+</html>

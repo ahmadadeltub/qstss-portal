@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Filter Test - QSTSS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .grade-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .grade-button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        .grade-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .grade-button.active {
+            background: #4CAF50;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+        .results {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .student-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏫 Grade Filter Test - Qatar Science and Technology Secondary School</h1>
+        <p>Testing grade filters for specialized tracks (Engineering, IT, Medical)</p>
+
+        <div class="test-section">
+            <h2>📊 Available Grades</h2>
+            <div id="availableGrades" class="results">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading available grades...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Filter Testing</h2>
+            <div class="grade-filter">
+                <button class="grade-button" onclick="testGradeFilter('9')">📚 Grade 9</button>
+                <button class="grade-button" onclick="testGradeFilter('10')">📚 Grade 10</button>
+                <button class="grade-button" onclick="testGradeFilter('11-Engineering')">🔧 Grade 11 - Engineering</button>
+                <button class="grade-button" onclick="testGradeFilter('11-IT')">💻 Grade 11 - IT</button>
+                <button class="grade-button" onclick="testGradeFilter('11-Medical')">🏥 Grade 11 - Medical</button>
+                <button class="grade-button" onclick="testGradeFilter('12-Engineering')">🔧 Grade 12 - Engineering</button>
+                <button class="grade-button" onclick="testGradeFilter('12-IT')">💻 Grade 12 - IT</button>
+                <button class="grade-button" onclick="testGradeFilter('12-Medical')">🏥 Grade 12 - Medical</button>
+                <button class="grade-button" onclick="testGradeFilter('')">🌟 All Grades</button>
+            </div>
+            
+            <div id="filterStatus" class="results">
+                <p>Click a grade button above to test filtering</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>👥 Filtered Students</h2>
+            <div id="studentResults" class="results">
+                <p>Select a grade filter to see students</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 CSV Order Verification</h2>
+            <button class="grade-button" onclick="verifyCSVOrder()">✅ Verify CSV Order</button>
+            <div id="csvOrderResults" class="results">
+                <p>Click the button above to verify CSV sorting</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000/api';
+        let currentGrade = '';
+
+        // Test authentication and get token
+        async function getAuthToken() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.token);
+                    return data.token;
+                }
+                throw new Error('Authentication failed');
+            } catch (error) {
+                console.error('Auth error:', error);
+                return null;
+            }
+        }
+
+        // Fetch available grades
+        async function fetchAvailableGrades() {
+            try {
+                const response = await fetch(`${API_BASE}/students/meta/filters`);
+                const data = await response.json();
+                
+                const gradesDiv = document.getElementById('availableGrades');
+                if (data.grades && data.grades.length > 0) {
+                    gradesDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Available Grades (${data.grades.length})</h3>
+                            ${data.grades.map(grade => `
+                                <div class="student-item">
+                                    <strong>${grade}</strong> - ${getGradeDisplayName(grade)}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="success">
+                            <h3>📋 Available Classes (${data.classes.length})</h3>
+                            <p>${data.classes.join(', ')}</p>
+                        </div>
+                    `;
+                } else {
+                    gradesDiv.innerHTML = '<div class="error">❌ No grades found</div>';
+                }
+            } catch (error) {
+                document.getElementById('availableGrades').innerHTML = `
+                    <div class="error">❌ Error fetching grades: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Test grade filtering
+        async function testGradeFilter(grade) {
+            currentGrade = grade;
+            
+            // Update active button
+            document.querySelectorAll('.grade-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const statusDiv = document.getElementById('filterStatus');
+            const resultsDiv = document.getElementById('studentResults');
+            
+            statusDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Testing filter for: ${grade || 'All Grades'}</p>
+                </div>
+            `;
+            
+            try {
+                const token = localStorage.getItem('token') || await getAuthToken();
+                if (!token) {
+                    throw new Error('Authentication required');
+                }
+
+                const params = new URLSearchParams({
+                    page: '1',
+                    limit: '20'
+                });
+                
+                if (grade) {
+                    params.append('grade', grade);
+                }
+
+                const response = await fetch(`${API_BASE}/students?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                statusDiv.innerHTML = `
+                    <div class="success">
+                        <h3>✅ Filter Test Successful</h3>
+                        <p><strong>Grade:</strong> ${grade || 'All Grades'}</p>
+                        <p><strong>Found:</strong> ${data.data ? data.data.length : 0} students</p>
+                        <p><strong>Total:</strong> ${data.pagination ? data.pagination.total : 'Unknown'}</p>
+                    </div>
+                `;
+                
+                if (data.data && data.data.length > 0) {
+                    resultsDiv.innerHTML = `
+                        <h3>👥 Students (showing first ${data.data.length})</h3>
+                        ${data.data.map((student, index) => `
+                            <div class="student-item">
+                                <strong>${index + 1}. ${student.firstName} ${student.lastName}</strong><br>
+                                ID: ${student.studentId} | Grade: ${student.grade} | Class: ${student.class}
+                            </div>
+                        `).join('')}
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">❌ No students found for this filter</div>';
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Filter Test Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                resultsDiv.innerHTML = '<div class="error">Failed to load students</div>';
+            }
+        }
+
+        // Verify CSV order
+        async function verifyCSVOrder() {
+            const resultsDiv = document.getElementById('csvOrderResults');
+            
+            resultsDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Verifying CSV order...</p>
+                </div>
+            `;
+            
+            try {
+                const token = localStorage.getItem('token') || await getAuthToken();
+                const response = await fetch(`${API_BASE}/students?page=1&limit=10`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                // Expected first students from CSV
+                const expectedFirst = [
+                    { id: '31063405638', name: 'AHMED ALI A A AL-LENQAWI' },
+                    { id: '31063405109', name: 'TAMEEM A.HAKEEM A A BA-NOAMAN' },
+                    { id: '31063401274', name: 'HASSEN KHALID H A AL-KUWARI' }
+                ];
+                
+                let verification = '<h3>📋 CSV Order Verification</h3>';
+                let allMatch = true;
+                
+                if (data.data && data.data.length > 0) {
+                    expectedFirst.forEach((expected, index) => {
+                        const actual = data.data[index];
+                        const actualName = `${actual?.firstName} ${actual?.lastName}`;
+                        const match = actual?.studentId === expected.id && actualName === expected.name;
+                        
+                        if (!match) allMatch = false;
+                        
+                        verification += `
+                            <div class="student-item" style="border-left-color: ${match ? '#4CAF50' : '#f44336'}">
+                                <strong>Position ${index + 1}:</strong><br>
+                                Expected: ${expected.name} (${expected.id})<br>
+                                Actual: ${actualName} (${actual?.studentId})<br>
+                                ${match ? '✅ Match' : '❌ Mismatch'}
+                            </div>
+                        `;
+                    });
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="${allMatch ? 'success' : 'error'}">
+                            ${verification}
+                            <h3>${allMatch ? '✅ CSV Order Verified!' : '❌ CSV Order Mismatch'}</h3>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">❌ No students found</div>';
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Verification failed: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Helper function for grade display names
+        function getGradeDisplayName(grade) {
+            const names = {
+                '9': 'Grade 9 (General)',
+                '10': 'Grade 10 (General)',
+                '11-Engineering': 'Grade 11 - Engineering Track',
+                '11-IT': 'Grade 11 - Information Technology Track',
+                '11-Medical': 'Grade 11 - Medical Sciences Track',
+                '12-Engineering': 'Grade 12 - Engineering Track',
+                '12-IT': 'Grade 12 - Information Technology Track',
+                '12-Medical': 'Grade 12 - Medical Sciences Track'
+            };
+            return names[grade] || `Grade ${grade}`;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Initializing Grade Filter Test');
+            await fetchAvailableGrades();
+            
+            // Auto-authenticate
+            await getAuthToken();
+        });
+    </script>
+</body>
+</html>
