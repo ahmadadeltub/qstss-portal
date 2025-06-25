@@ -26,14 +26,23 @@ app.use('/api/', limiter);
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:3000',
+    process.env.CORS_ORIGIN, // Dynamic CORS for LAN
     'http://localhost:3001', // Main frontend port
     'http://localhost:4001', // Frontend development port
     'http://localhost:4002', // Previous frontend port
     'http://localhost:4003', // Current frontend port
+    'http://localhost:4004', // Additional frontend port
+    'http://localhost:4005', // Latest frontend port
     'http://localhost:5001', // Additional port for development
     'http://localhost:5002', // Alternative frontend port
-    'http://localhost:5000'  // Alternative frontend port
-  ],
+    'http://localhost:5000', // Alternative frontend port
+    // LAN access patterns
+    /^http:\/\/192\.168\.1\.\d+:3001$/,
+    /^http:\/\/192\.168\.0\.\d+:3001$/,
+    /^http:\/\/10\.0\.0\.\d+:3001$/,
+    /^http:\/\/172\.16\.\d+\.\d+:3001$/,
+    /^http:\/\/192\.168\.\d+\.\d+:3001$/
+  ].filter(Boolean), // Remove undefined values
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
@@ -80,6 +89,9 @@ try {
   
   app.use('/api/reports', require('./routes/reports'));
   console.log('Reports routes loaded');
+  
+  app.use('/api/notifications', require('./routes/notifications'));
+  console.log('Notifications routes loaded');
 } catch (error) {
   console.error('Error loading routes:', error);
 }
@@ -108,9 +120,48 @@ const PORT = process.env.PORT || 5001;
 
 console.log('Starting server on port', PORT);
 
-const server = app.listen(PORT, () => {
+// Create HTTP server and initialize Socket.IO
+const server = require('http').createServer(app);
+const io = require('socket.io')(server, {
+  cors: {
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:4001',
+      'http://localhost:4002',
+      'http://localhost:4003',
+      'http://localhost:4004',
+      'http://localhost:4005',
+      'http://localhost:5000',
+      'http://localhost:5001',
+      'http://localhost:5002',
+      // LAN access patterns
+      /^http:\/\/192\.168\.1\.\d+:3001$/,
+      /^http:\/\/192\.168\.0\.\d+:3001$/,
+      /^http:\/\/10\.0\.0\.\d+:3001$/,
+      /^http:\/\/172\.16\.\d+\.\d+:3001$/,
+      /^http:\/\/192\.168\.\d+\.\d+:3001$/
+    ].filter(Boolean),
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Initialize notification service
+const notificationService = require('./services/notificationService');
+notificationService.initialize(io);
+
+// Initialize competition monitor service
+const competitionMonitor = require('./services/competitionMonitor');
+
+server.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🔔 Socket.IO notification service active`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Start competition monitoring
+  competitionMonitor.start();
+  
   console.log('Server ready for requests!');
 });
 
@@ -121,6 +172,10 @@ server.on('error', (err) => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received. Shutting down gracefully...');
+  
+  // Stop competition monitor
+  competitionMonitor.stop();
+  
   server.close(() => {
     console.log('Server closed');
     mongoose.connection.close(() => {

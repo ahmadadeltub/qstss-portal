@@ -106,39 +106,70 @@ const Reports: React.FC = () => {
       
       const response = await apiService.getDashboardStats();
       console.log('✅ Raw API response:', response);
-      console.log('📊 Response type:', typeof response);
-      console.log('📊 Response keys:', Object.keys(response || {}));
       
-      // Transform the response to match our interface
-      const transformedData: ReportData = {
-        summary: response.summary || response.stats || {
-          totalStudents: 0,
-          totalCompetitions: 0,
-          totalRegistrations: 0,
-          totalTeachers: 0
-        },
-        competitions: response.competitions || [],
-        students: response.students || [],
-        teachers: response.teachers || [],
-        participationTrends: response.participationTrends || [],
-        gradeDistribution: response.gradeDistribution || []
-      };
+      // For teachers, filter data to only show their own information
+      if (user?.role === 'teacher') {
+        const teacherData = response.teachers?.find((t: any) => t._id === user.id) || {
+          registrationCount: 0,
+          studentCount: 0
+        };
+        
+        // Get teacher's own registrations
+        const teacherRegistrations = await apiService.getMyRegistrations();
+        
+        // Transform data for teacher view
+        const transformedData: ReportData = {
+          summary: {
+            totalStudents: teacherData.studentCount || response.stats?.myRegistrations || 0,
+            totalCompetitions: teacherRegistrations?.length || 0,
+            totalRegistrations: teacherData.registrationCount || 0,
+            totalTeachers: 1 // Only show themselves
+          },
+          competitions: teacherRegistrations?.map((reg: any) => ({
+            _id: reg.competition._id,
+            name: reg.competition.name,
+            category: reg.competition.category,
+            status: reg.competition.status,
+            registrationCount: reg.students?.length || 0,
+            maxParticipants: reg.competition.maxParticipants || 0,
+            registrationDeadline: reg.competition.registrationDeadline
+          })) || [],
+          students: [], // Teachers don't see all students data
+          teachers: [{
+            _id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            department: user.department || 'N/A',
+            registrationCount: teacherData.registrationCount || 0,
+            studentCount: teacherData.studentCount || 0
+          }],
+          participationTrends: [],
+          gradeDistribution: []
+        };
+        
+        setReportData(transformedData);
+      } else {
+        // Admin view - show all data
+        const transformedData: ReportData = {
+          summary: response.summary || response.stats || {
+            totalStudents: 0,
+            totalCompetitions: 0,
+            totalRegistrations: 0,
+            totalTeachers: 0
+          },
+          competitions: response.competitions || [],
+          students: response.students || [],
+          teachers: response.teachers || [],
+          participationTrends: response.participationTrends || [],
+          gradeDistribution: response.gradeDistribution || []
+        };
+        
+        setReportData(transformedData);
+      }
       
-      console.log('🔄 Transformed data:', transformedData);
-      console.log('📊 Summary data:', transformedData.summary);
-      console.log('📊 Competitions count:', transformedData.competitions.length);
-      console.log('📊 Students count:', transformedData.students.length);
-      console.log('📊 Teachers count:', transformedData.teachers.length);
-      
-      setReportData(transformedData);
       setError(null);
     } catch (err: any) {
       console.error('❌ Error fetching report data:', err);
-      console.error('❌ Error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
-      });
       
       let errorMessage = 'Failed to load reports data. Please try again.';
       if (err.response?.status === 401) {
@@ -334,8 +365,8 @@ const Reports: React.FC = () => {
   return (
     <Container maxWidth="xl">
       <Box sx={{ py: 4 }}>
-        {/* Debug Information */}
-        {process.env.NODE_ENV === 'development' && (
+        {/* Debug Information - Commented out for production */}
+        {false && process.env.NODE_ENV === 'development' && (
           <Alert severity="info" sx={{ mb: 2 }}>
             <strong>Debug Info:</strong> Loading: {loading.toString()}, Error: {error || 'none'}, 
             Data: {reportData ? 'loaded' : 'null'}, User: {user?.firstName || 'none'}, 
@@ -563,62 +594,90 @@ const Reports: React.FC = () => {
                 }
               }}
             >
-              <Tab 
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <EmojiEvents />
-                    Competitions Analytics
-                  </Box>
-                } 
-              />
-              <Tab 
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <School />
-                    Student Performance
-                  </Box>
-                } 
-              />
-              <Tab 
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <People />
-                    Teacher Activity
-                  </Box>
-                } 
-              />
+              {user?.role === 'admin' ? (
+                <>
+                  <Tab 
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <EmojiEvents />
+                        Competitions Analytics
+                      </Box>
+                    } 
+                  />
+                  <Tab 
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <School />
+                        Student Performance
+                      </Box>
+                    } 
+                  />
+                  <Tab 
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <People />
+                        Teacher Activity
+                      </Box>
+                    } 
+                  />
+                </>
+              ) : (
+                <>
+                  <Tab 
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <EmojiEvents />
+                        My Competitions
+                      </Box>
+                    } 
+                  />
+                  <Tab 
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Assessment />
+                        My Activity
+                      </Box>
+                    } 
+                  />
+                </>
+              )}
             </Tabs>
           </Box>
 
-          {/* Competition Report */}
+          {/* Competition/My Competitions Report */}
           <TabPanel value={tabValue} index={0}>
             <Box sx={{ p: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
                 <Box>
                   <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    🏆 Competition Performance Dashboard
+                    {user?.role === 'admin' ? '🏆 Competition Performance Dashboard' : '🏆 My Competitions'}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    Detailed analysis of competition registration and participation metrics
+                    {user?.role === 'admin' 
+                      ? 'Detailed analysis of competition registration and participation metrics'
+                      : 'Overview of competitions you have registered students for'
+                    }
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button 
-                    startIcon={<FilterList />}
-                    variant="outlined"
-                    size="small"
-                  >
-                    Filter
-                  </Button>
-                  <Button 
-                    startIcon={<Download />}
-                    onClick={() => exportReport('competitions')}
-                    variant="contained"
-                    size="small"
-                  >
-                    Export Data
-                  </Button>
-                </Box>
+                {user?.role === 'admin' && (
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button 
+                      startIcon={<FilterList />}
+                      variant="outlined"
+                      size="small"
+                    >
+                      Filter
+                    </Button>
+                    <Button 
+                      startIcon={<Download />}
+                      onClick={() => exportReport('competitions')}
+                      variant="contained"
+                      size="small"
+                    >
+                      Export Data
+                    </Button>
+                  </Box>
+                )}
               </Box>
               
               <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
@@ -626,18 +685,28 @@ const Reports: React.FC = () => {
                   <TableHead sx={{ bgcolor: 'grey.50' }}>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 'bold' }}>Competition Details</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Department</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Category</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Registrations</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Capacity</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Fill Rate</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
+                        {user?.role === 'admin' ? 'Total Registrations' : 'My Students'}
+                      </TableCell>
+                      {user?.role === 'admin' && (
+                        <>
+                          <TableCell align="center" sx={{ fontWeight: 'bold' }}>Capacity</TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 'bold' }}>Fill Rate</TableCell>
+                        </>
+                      )}
                       <TableCell sx={{ fontWeight: 'bold' }}>Deadline</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                      {user?.role === 'admin' && (
+                        <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                      )}
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {reportData.competitions.map((competition) => {
-                      const fillRate = Math.round((competition.registrationCount / competition.maxParticipants) * 100);
+                      const fillRate = user?.role === 'admin' 
+                        ? Math.round((competition.registrationCount / competition.maxParticipants) * 100)
+                        : 0;
                       return (
                         <TableRow key={competition._id} hover>
                           <TableCell>
@@ -671,36 +740,39 @@ const Reports: React.FC = () => {
                               {competition.registrationCount}
                             </Typography>
                           </TableCell>
-                          <TableCell align="center">{competition.maxParticipants}</TableCell>
-                          <TableCell align="center">
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                              <LinearProgress 
-                                variant="determinate" 
-                                value={Math.min(fillRate, 100)} 
-                                sx={{ width: 40, height: 6, borderRadius: 3 }}
-                                color={fillRate >= 80 ? 'success' : fillRate >= 50 ? 'warning' : 'error'}
-                              />
-                              <Chip 
-                                label={`${fillRate}%`}
-                                color={fillRate >= 80 ? 'success' : fillRate >= 50 ? 'warning' : 'default'}
-                                size="small"
-                                variant="outlined"
-                              />
-                            </Box>
-                          </TableCell>
+                          {user?.role === 'admin' && (
+                            <>
+                              <TableCell align="center">{competition.maxParticipants}</TableCell>
+                              <TableCell align="center">
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                  <LinearProgress 
+                                    variant="determinate" 
+                                    value={Math.min(fillRate, 100)} 
+                                    sx={{ width: 40, height: 6, borderRadius: 3 }}
+                                    color={fillRate >= 80 ? 'success' : fillRate >= 50 ? 'warning' : 'error'}
+                                  />
+                                  <Chip 
+                                    label={`${fillRate}%`}
+                                    size="small"
+                                    color={fillRate >= 80 ? 'success' : fillRate >= 50 ? 'warning' : 'error'}
+                                    variant="outlined"
+                                  />
+                                </Box>
+                              </TableCell>
+                            </>
+                          )}
                           <TableCell>
                             <Typography variant="body2">
                               {new Date(competition.registrationDeadline).toLocaleDateString()}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {new Date(competition.registrationDeadline) > new Date() ? 'Open' : 'Closed'}
-                            </Typography>
                           </TableCell>
-                          <TableCell align="center">
-                            <IconButton size="small">
-                              <MoreVert fontSize="small" />
-                            </IconButton>
-                          </TableCell>
+                          {user?.role === 'admin' && (
+                            <TableCell align="center">
+                              <IconButton size="small" color="primary">
+                                <MoreVert />
+                              </IconButton>
+                            </TableCell>
+                          )}
                         </TableRow>
                       );
                     })}
@@ -710,180 +782,253 @@ const Reports: React.FC = () => {
             </Box>
           </TabPanel>
 
-          {/* Student Report */}
+          {/* Student Report / My Activity */}
           <TabPanel value={tabValue} index={1}>
             <Box sx={{ p: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
                 <Box>
                   <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    🎓 Student Participation Analytics
+                    {user?.role === 'admin' ? '🎓 Student Participation Analytics' : '📊 My Teaching Activity'}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    Comprehensive view of student engagement and competition participation
+                    {user?.role === 'admin' 
+                      ? 'Comprehensive view of student engagement and competition participation'
+                      : 'Overview of your teaching performance and student registrations'
+                    }
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button 
-                    startIcon={<FilterList />}
-                    variant="outlined"
-                    size="small"
-                  >
-                    Filter by Grade
-                  </Button>
-                  <Button 
-                    startIcon={<Download />}
-                    onClick={() => exportReport('students')}
-                    variant="contained"
-                    size="small"
-                  >
-                    Export Data
-                  </Button>
-                </Box>
+                {user?.role === 'admin' && (
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button 
+                      startIcon={<FilterList />}
+                      variant="outlined"
+                      size="small"
+                    >
+                      Filter by Grade
+                    </Button>
+                    <Button 
+                      startIcon={<Download />}
+                      onClick={() => exportReport('students')}
+                      variant="contained"
+                      size="small"
+                    >
+                      Export Data
+                    </Button>
+                  </Box>
+                )}
               </Box>
               
-              <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
-                <Table>
-                  <TableHead sx={{ bgcolor: 'grey.50' }}>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Student Information</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Academic Details</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Competitions</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Participation Level</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Performance</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {reportData.students
-                      .sort((a, b) => b.registrationCount - a.registrationCount)
-                      .slice(0, 50)
-                      .map((student, index) => {
-                        const level = student.registrationCount >= 3 ? 'High' : 
-                                     student.registrationCount >= 2 ? 'Medium' : 
-                                     student.registrationCount >= 1 ? 'Low' : 'None';
-                        const levelColor = student.registrationCount >= 3 ? 'success' : 
-                                          student.registrationCount >= 2 ? 'warning' : 
-                                          student.registrationCount >= 1 ? 'info' : 'default';
-                        
-                        return (
-                          <TableRow key={student._id} hover>
-                            <TableCell>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Avatar sx={{ 
-                                  bgcolor: index < 3 ? 'primary.main' : 'grey.400',
-                                  width: 36,
-                                  height: 36
-                                }}>
-                                  {student.firstName[0]}{student.lastName[0]}
-                                </Avatar>
+              {user?.role === 'admin' ? (
+                <>
+                  <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                    <Table>
+                      <TableHead sx={{ bgcolor: 'grey.50' }}>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Student Information</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Academic Details</TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 'bold' }}>Competitions</TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 'bold' }}>Participation Level</TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 'bold' }}>Performance</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {reportData.students
+                        .sort((a, b) => b.registrationCount - a.registrationCount)
+                        .slice(0, 50)
+                        .map((student, index) => {
+                          const level = student.registrationCount >= 3 ? 'High' : 
+                                       student.registrationCount >= 2 ? 'Medium' : 
+                                       student.registrationCount >= 1 ? 'Low' : 'None';
+                          const levelColor = student.registrationCount >= 3 ? 'success' : 
+                                            student.registrationCount >= 2 ? 'warning' : 
+                                            student.registrationCount >= 1 ? 'info' : 'default';
+                          
+                          return (
+                            <TableRow key={student._id} hover>
+                              <TableCell>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                  <Avatar sx={{ 
+                                    bgcolor: index < 3 ? 'primary.main' : 'grey.400',
+                                    width: 36,
+                                    height: 36
+                                  }}>
+                                    {student.firstName[0]}{student.lastName[0]}
+                                  </Avatar>
+                                  <Box>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                      {student.firstName} {student.lastName}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      ID: {student.studentId}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              </TableCell>
+                              <TableCell>
                                 <Box>
-                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                    {student.firstName} {student.lastName}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary">
-                                    ID: {student.studentId}
+                                  <Chip 
+                                    label={`Grade ${student.grade}`}
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                    sx={{ mb: 0.5 }}
+                                  />
+                                  <Typography variant="caption" display="block" color="text.secondary">
+                                    Class {student.class}
                                   </Typography>
                                 </Box>
-                              </Box>
-                            </TableCell>
-                            <TableCell>
-                              <Box>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Badge badgeContent={student.registrationCount} color="primary">
+                                  <Box sx={{ 
+                                    width: 32, 
+                                    height: 32, 
+                                    borderRadius: '50%',
+                                    bgcolor: 'primary.light',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}>
+                                    <EmojiEvents fontSize="small" />
+                                  </Box>
+                                </Badge>
+                              </TableCell>
+                              <TableCell align="center">
                                 <Chip 
-                                  label={`Grade ${student.grade}`}
+                                  label={level}
+                                  color={levelColor}
                                   size="small"
-                                  color="primary"
-                                  variant="outlined"
-                                  sx={{ mb: 0.5 }}
+                                  icon={level === 'High' ? <TrendingUp /> : undefined}
                                 />
-                                <Typography variant="caption" display="block" color="text.secondary">
-                                  Class {student.class}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Badge badgeContent={student.registrationCount} color="primary">
-                                <Box sx={{ 
-                                  width: 32, 
-                                  height: 32, 
-                                  borderRadius: '50%',
-                                  bgcolor: 'primary.light',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}>
-                                  <EmojiEvents fontSize="small" />
-                                </Box>
-                              </Badge>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Chip 
-                                label={level}
-                                color={levelColor}
-                                size="small"
-                                icon={level === 'High' ? <TrendingUp /> : undefined}
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              <LinearProgress 
-                                variant="determinate" 
-                                value={Math.min(student.registrationCount * 25, 100)} 
-                                sx={{ width: 60, height: 6, borderRadius: 3 }}
-                                color={levelColor === 'default' ? 'primary' : levelColor as any}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              
-              {reportData.students.length > 50 && (
-                <Alert severity="info" sx={{ mt: 3 }}>
-                  <Typography variant="body2">
-                    📊 Showing top 50 most active students out of {reportData.students.length} total students. 
-                    Export CSV for complete dataset.
-                  </Typography>
-                </Alert>
+                              </TableCell>
+                              <TableCell align="center">
+                                <LinearProgress 
+                                  variant="determinate" 
+                                  value={Math.min(student.registrationCount * 25, 100)} 
+                                  sx={{ width: 60, height: 6, borderRadius: 3 }}
+                                  color={levelColor === 'default' ? 'primary' : levelColor as any}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  
+                  {reportData.students.length > 50 && (
+                    <Alert severity="info" sx={{ mt: 3 }}>
+                      <Typography variant="body2">
+                        📊 Showing top 50 most active students out of {reportData.students.length} total students. 
+                        Export CSV for complete dataset.
+                      </Typography>
+                    </Alert>
+                  )}
+                </>
+              ) : (
+                // Teacher Activity View
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Person />
+                          Teaching Summary
+                        </Typography>
+                        <Box sx={{ mt: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Total Registrations:</Typography>
+                            <Typography variant="body2" fontWeight="bold">
+                              {reportData.teachers[0]?.registrationCount || 0}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Students Registered:</Typography>
+                            <Typography variant="body2" fontWeight="bold">
+                              {reportData.teachers[0]?.studentCount || 0}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Department:</Typography>
+                            <Typography variant="body2" fontWeight="bold">
+                              {reportData.teachers[0]?.department || 'N/A'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Analytics />
+                          Performance Metrics
+                        </Typography>
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            Activity Level
+                          </Typography>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={Math.min((reportData.teachers[0]?.registrationCount || 0) * 20, 100)} 
+                            sx={{ mb: 2, height: 8, borderRadius: 4 }}
+                            color={
+                              (reportData.teachers[0]?.registrationCount || 0) >= 3 ? 'success' : 
+                              (reportData.teachers[0]?.registrationCount || 0) >= 2 ? 'warning' : 'info'
+                            }
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            {(reportData.teachers[0]?.registrationCount || 0) >= 3 ? 'Highly Active' : 
+                             (reportData.teachers[0]?.registrationCount || 0) >= 2 ? 'Active' : 
+                             (reportData.teachers[0]?.registrationCount || 0) >= 1 ? 'Getting Started' : 'New'}
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
               )}
             </Box>
           </TabPanel>
 
-          {/* Teacher Report */}
-          <TabPanel value={tabValue} index={2}>
-            <Box sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    👨‍🏫 Faculty Engagement Dashboard
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    Teacher activity metrics and student mentorship statistics
-                  </Typography>
+          {/* Teacher Report - Admin Only */}
+          {user?.role === 'admin' && (
+            <TabPanel value={tabValue} index={2}>
+              <Box sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                  <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      👨‍🏫 Faculty Engagement Dashboard
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      Teacher activity metrics and student mentorship statistics
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button 
+                      startIcon={<FilterList />}
+                      variant="outlined"
+                      size="small"
+                    >
+                      Filter by Department
+                    </Button>
+                    <Button 
+                      startIcon={<Download />}
+                      onClick={() => exportReport('teachers')}
+                      variant="contained"
+                      size="small"
+                    >
+                      Export Data
+                    </Button>
+                  </Box>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button 
-                    startIcon={<FilterList />}
-                    variant="outlined"
-                    size="small"
-                  >
-                    Filter by Department
-                  </Button>
-                  <Button 
-                    startIcon={<Download />}
-                    onClick={() => exportReport('teachers')}
-                    variant="contained"
-                    size="small"
-                  >
-                    Export Data
-                  </Button>
-                </Box>
-              </Box>
-              
-              <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
-                <Table>
-                  <TableHead sx={{ bgcolor: 'grey.50' }}>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Teacher Profile</TableCell>
+                
+                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                  <Table>
+                    <TableHead sx={{ bgcolor: 'grey.50' }}>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Teacher Profile</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>Department</TableCell>
                       <TableCell align="center" sx={{ fontWeight: 'bold' }}>Registrations</TableCell>
                       <TableCell align="center" sx={{ fontWeight: 'bold' }}>Students Mentored</TableCell>
@@ -974,6 +1119,7 @@ const Reports: React.FC = () => {
               </TableContainer>
             </Box>
           </TabPanel>
+          )}
         </Paper>
 
         {/* Export Dialog */}

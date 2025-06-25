@@ -765,7 +765,26 @@ const Teachers: React.FC = () => {
                     onChange={(e) => setTeacherForm({ ...teacherForm, department: e.target.value })}
                     label="Department"
                   >
-                    {['Mathematics', 'Science', 'English', 'Arabic', 'History', 'Art', 'Physical Education', 'Administration'].map((dept) => (
+                    {[
+                      'STEM Department',
+                      'FAB Lab Department', 
+                      'Energy Department',
+                      'Robotics Department',
+                      'Project Research Department',
+                      'Electronics Projects Department',
+                      'Computer Science Department',
+                      'Physics Department',
+                      'Mathematics Department',
+                      'Arabic Language Department',
+                      'Islamic Education Department',
+                      'English Language Department',
+                      'Virtual Reality (VR) Department',
+                      'Augmented Reality (AR) Department',
+                      'Social Studies Department',
+                      'Physical Education Department',
+                      'Design Technology Department',
+                      'Library Services Department'
+                    ].map((dept) => (
                       <MenuItem key={dept} value={dept}>{dept}</MenuItem>
                     ))}
                   </Select>

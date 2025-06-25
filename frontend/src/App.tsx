@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import RealTimeNotificationWrapper from './components/RealTimeNotificationWrapper';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/LoadingSpinner';
 import Layout from './components/Layout/Layout';
@@ -178,39 +179,67 @@ function App() {
         <CssBaseline />
         <AuthProvider>
           <NotificationProvider>
-            <Router>
-            <Suspense fallback={<LoadingSpinner variant="fullscreen" message="Loading Application..." />}>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                
-                {/* Protected Routes */}
-                <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="students" element={<Students />} />
-                  <Route path="teachers" element={<Teachers />} />
-                  <Route path="competitions" element={<Competitions />} />
-                  <Route path="my-registrations" element={<MyRegistrations />} />
-                  <Route path="reports" element={<Reports />} />
-                  <Route path="notifications" element={<Notifications />} />
+            <RealTimeNotificationWrapper>
+              <Router>
+              <Suspense fallback={<LoadingSpinner variant="fullscreen" message="Loading Application..." />}>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
                   
-                  {/* Admin Only Routes */}
-                  <Route 
-                    path="admin" 
-                    element={
-                      <ProtectedAdminRoute>
-                        <AdminPanel />
-                      </ProtectedAdminRoute>
-                    } 
-                  />
-                </Route>
-                
-                {/* Catch all route */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </Suspense>            </Router>
+                  {/* Protected Routes */}
+                  <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                    <Route index element={<Navigate to="/dashboard" replace />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    
+                    {/* Admin Only Routes for Students, Teachers, Competitions */}
+                    <Route 
+                      path="students" 
+                      element={
+                        <ProtectedAdminRoute>
+                          <Students />
+                        </ProtectedAdminRoute>
+                      } 
+                    />
+                    <Route 
+                      path="teachers" 
+                      element={
+                        <ProtectedAdminRoute>
+                          <Teachers />
+                        </ProtectedAdminRoute>
+                      } 
+                    />
+                    <Route 
+                      path="competitions" 
+                      element={
+                        <ProtectedAdminRoute>
+                          <Competitions />
+                        </ProtectedAdminRoute>
+                      } 
+                    />
+                    
+                    {/* Routes available to all authenticated users */}
+                    <Route path="my-registrations" element={<MyRegistrations />} />
+                    <Route path="reports" element={<Reports />} />
+                    <Route path="notifications" element={<Notifications />} />
+                    
+                    {/* Admin Panel */}
+                    <Route 
+                      path="admin" 
+                      element={
+                        <ProtectedAdminRoute>
+                          <AdminPanel />
+                        </ProtectedAdminRoute>
+                      } 
+                    />
+                  </Route>
+                  
+                  {/* Catch all route */}
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </Suspense>            
+              </Router>
+            </RealTimeNotificationWrapper>
           </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>

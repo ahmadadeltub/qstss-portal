@@ -172,6 +172,26 @@ export const apiService = {
     return result;
   },
 
+  async addStudentsToRegistration(registrationId: string, studentIds: string[]) {
+    const response = await api.post(`/registrations/${registrationId}/students`, {
+      studentIds
+    });
+    
+    // Extract notification data if present
+    const result = response.data;
+    if (result.notification) {
+      // Trigger notification in the app
+      window.dispatchEvent(new CustomEvent('newNotification', { 
+        detail: { 
+          type: 'registration', 
+          data: result.notification 
+        } 
+      }));
+    }
+    
+    return result;
+  },
+
   // Reports
   async getDashboardStats() {
     const response = await api.get('/reports/dashboard');

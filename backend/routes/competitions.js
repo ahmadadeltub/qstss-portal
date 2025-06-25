@@ -2,6 +2,7 @@ const express = require('express');
 const Competition = require('../models/Competition');
 const Registration = require('../models/Registration');
 const { authenticateToken, authorizeAdmin } = require('../middleware/auth');
+const notificationService = require('../services/notificationService');
 const router = express.Router();
 
 // Get all competitions with registration counts
@@ -145,6 +146,14 @@ router.post('/', authenticateToken, async (req, res) => {
     const populatedCompetition = await Competition.findById(competition._id)
       .populate('organizer', 'firstName lastName');
 
+    // Send real-time notification to all teachers and admins about new competition
+    try {
+      await notificationService.broadcastCompetitionUpdate(populatedCompetition, 'created');
+      console.log('✅ Real-time notification sent to all teachers/admins about new competition');
+    } catch (error) {
+      console.error('❌ Failed to send real-time competition notification:', error);
+    }
+
     res.status(201).json({
       message: 'Competition created successfully',
       competition: populatedCompetition
@@ -190,6 +199,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
     const updatedCompetition = await Competition.findById(competition._id)
       .populate('organizer', 'firstName lastName');
+
+    // Send real-time notification to all teachers and admins about competition update
+    try {
+      await notificationService.broadcastCompetitionUpdate(updatedCompetition, 'updated');
+      console.log('✅ Real-time notification sent to all teachers/admins about competition update');
+    } catch (error) {
+      console.error('❌ Failed to send real-time competition update notification:', error);
+    }
 
     res.json({
       message: 'Competition updated successfully',

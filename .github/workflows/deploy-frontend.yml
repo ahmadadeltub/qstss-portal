@@ -41,7 +41,7 @@ jobs:
       working-directory: ./frontend
       run: npm run build
       env:
-        REACT_APP_API_URL: https://qstss-backend-production.up.railway.app/api
+        REACT_APP_API_URL: https://qstss-portal-production.up.railway.app/api
         REACT_APP_ENV: production
         GENERATE_SOURCEMAP: false
 

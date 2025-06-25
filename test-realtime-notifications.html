@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔔 Real-Time Notification System Test - Qatar STSS Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .test-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .button.success { background: linear-gradient(45deg, #27ae60, #229954); }
+        .button.warning { background: linear-gradient(45deg, #f39c12, #e67e22); }
+        .button.danger { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        .button.info { background: linear-gradient(45deg, #9b59b6, #8e44ad); }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 50px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .loading {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            color: #2c3e50;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #27ae60;
+            color: #155724;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #e74c3c;
+            color: #721c24;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #f39c12;
+            color: #856404;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .badge {
+            background: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .notification-demo {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-weight: bold;
+        }
+        
+        .connected { color: #27ae60; }
+        .disconnected { color: #e74c3c; }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .real-time-notifications {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .live-notification {
+            background: white;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .live-notification.priority-high { border-left-color: #f39c12; }
+        .live-notification.priority-urgent { border-left-color: #e74c3c; }
+        
+        .notification-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .notification-message {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .notification-time {
+            color: #95a5a6;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        <span class="disconnected">🔴 Disconnected</span>
+    </div>
+    
+    <div class="real-time-notifications" id="liveNotifications"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🔔 Real-Time Notification System Test</h1>
+            <p>Complete testing suite for Qatar Science & Technology School Portal notifications</p>
+            <div style="margin-top: 15px;">
+                <span class="badge">Socket.IO</span>
+                <span class="badge">Real-time</span>
+                <span class="badge">Broadcast</span>
+                <span class="badge">Teacher Portal</span>
+            </div>
+        </div>
+        
+        <!-- Connection Test -->
+        <div class="test-section">
+            <h3>🔌 Step 1: Connection & Authentication</h3>
+            <p>Test Socket.IO connection and user authentication for real-time notifications.</p>
+            <button class="button" onclick="testConnection()">🚀 Test Connection</button>
+            <button class="button success" onclick="authenticateUser()">🔐 Authenticate as Admin</button>
+            <div id="connectionResult" class="result">Click "Test Connection" to check Socket.IO connectivity</div>
+        </div>
+        
+        <!-- Registration Notifications -->
+        <div class="test-section">
+            <h3>📝 Step 2: Student Registration Notifications</h3>
+            <p>Test real-time notifications when students are registered for competitions.</p>
+            <button class="button success" onclick="testRegistrationNotification()">👥 Register Students</button>
+            <button class="button info" onclick="triggerManualRegistration()">🎯 Manual Registration Test</button>
+            <div id="registrationResult" class="result">Registration notifications will appear here</div>
+            
+            <div class="notification-demo">
+                <strong>Expected Notification:</strong><br>
+                "✅ New Student Registration - Ahmed Ali, Sarah Johnson have been successfully registered for 'Qatar Math Olympiad' by Dr. Ahmed Al-Rashid"
+            </div>
+        </div>
+        
+        <!-- Competition Updates -->
+        <div class="test-section">
+            <h3>🏆 Step 3: Competition Update Notifications</h3>
+            <p>Test notifications for new competitions, updates, and competition endings.</p>
+            <button class="button warning" onclick="testCompetitionCreation()">➕ Create Competition</button>
+            <button class="button info" onclick="testCompetitionUpdate()">📝 Update Competition</button>
+            <button class="button danger" onclick="testCompetitionEnding()">🏁 End Competition</button>
+            <div id="competitionResult" class="result">Competition notifications will appear here</div>
+        </div>
+        
+        <!-- Withdrawal Notifications -->
+        <div class="test-section">
+            <h3>❌ Step 4: Registration Withdrawal Notifications</h3>
+            <p>Test notifications when registrations are cancelled or students are removed.</p>
+            <button class="button warning" onclick="testWithdrawalNotification()">🗑️ Cancel Registration</button>
+            <button class="button danger" onclick="testStudentRemoval()">👤➖ Remove Student</button>
+            <div id="withdrawalResult" class="result">Withdrawal notifications will appear here</div>
+        </div>
+        
+        <!-- Broadcast Test -->
+        <div class="test-section">
+            <h3>📢 Step 5: Broadcast to All Teachers</h3>
+            <p>Test system-wide notifications sent to all teachers and administrators.</p>
+            <button class="button info" onclick="testBroadcastNotification()">📻 Send Broadcast</button>
+            <button class="button" onclick="testSystemAnnouncement()">📣 System Announcement</button>
+            <div id="broadcastResult" class="result">Broadcast notifications will appear here</div>
+        </div>
+        
+        <!-- Live Portal Integration -->
+        <div class="test-section">
+            <h3>🌐 Step 6: Live Portal Integration</h3>
+            <p>Test the notification system within the actual teacher portal.</p>
+            <button class="button" onclick="openPortal()">🏫 Open Teacher Portal</button>
+            <button class="button success" onclick="openNotificationsPage()">🔔 View Notifications</button>
+            <button class="button info" onclick="clearLiveNotifications()">🧹 Clear Live Notifications</button>
+            <div id="portalResult" class="result">Portal integration testing results</div>
+        </div>
+        
+        <!-- System Status -->
+        <div class="test-section">
+            <h3>📊 System Status & Statistics</h3>
+            <div class="status-grid" id="systemStatus">
+                <div class="status-card">
+                    <h4>🔗 Connection</h4>
+                    <p id="connectionInfo">Not connected</p>
+                </div>
+                <div class="status-card">
+                    <h4>👥 Connected Users</h4>
+                    <p id="userCount">Unknown</p>
+                </div>
+                <div class="status-card">
+                    <h4>📨 Notifications Sent</h4>
+                    <p id="notificationCount">0</p>
+                </div>
+                <div class="status-card">
+                    <h4>⏱️ Last Update</h4>
+                    <p id="lastUpdate">Never</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = null;
+        let authToken = null;
+        let notificationCount = 0;
+        const API_BASE = 'http://192.168.1.28:4000/api';
+        const SOCKET_URL = 'http://192.168.1.28:4000';
+
+        // Initialize Socket.IO connection
+        function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Connecting to notification service...</div>';
+            
+            try {
+                socket = io(SOCKET_URL, {
+                    transports: ['websocket', 'polling'],
+                    cors: {
+                        origin: "*",
+                        methods: ["GET", "POST"]
+                    }
+                });
+
+                socket.on('connect', () => {
+                    updateConnectionStatus(true);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Successfully connected to real-time notification service!<br>
+                            <strong>Socket ID:</strong> ${socket.id}<br>
+                            <strong>Server:</strong> ${SOCKET_URL}<br>
+                            <strong>Transport:</strong> ${socket.io.engine.transport.name}
+                        </div>
+                    `;
+                    
+                    // Listen for notifications
+                    setupNotificationListeners();
+                });
+
+                socket.on('disconnect', () => {
+                    updateConnectionStatus(false);
+                    resultDiv.innerHTML = '<div class="error">❌ Disconnected from notification service</div>';
+                });
+
+                socket.on('connect_error', (error) => {
+                    updateConnectionStatus(false);
+                    resultDiv.innerHTML = `<div class="error">❌ Connection failed: ${error.message}</div>`;
+                });
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Failed to initialize connection: ${error.message}</div>`;
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (connected) {
+                statusDiv.innerHTML = '<span class="connected">🟢 Connected</span>';
+                document.getElementById('connectionInfo').textContent = `Connected to ${SOCKET_URL}`;
+            } else {
+                statusDiv.innerHTML = '<span class="disconnected">🔴 Disconnected</span>';
+                document.getElementById('connectionInfo').textContent = 'Not connected';
+            }
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        function setupNotificationListeners() {
+            // Listen for broadcast notifications
+            socket.on('new_notification', (notification) => {
+                console.log('📢 Received broadcast notification:', notification);
+                showLiveNotification(notification, 'broadcast');
+                notificationCount++;
+                updateNotificationCount();
+            });
+
+            // Listen for personal notifications
+            socket.on('personal_notification', (notification) => {
+                console.log('👤 Received personal notification:', notification);
+                showLiveNotification(notification, 'personal');
+                notificationCount++;
+                updateNotificationCount();
+            });
+        }
+
+        function showLiveNotification(notification, type) {
+            const container = document.getElementById('liveNotifications');
+            const notifDiv = document.createElement('div');
+            notifDiv.className = `live-notification priority-${notification.priority || 'medium'}`;
+            
+            notifDiv.innerHTML = `
+                <div class="notification-title">
+                    ${type === 'broadcast' ? '📢' : '👤'} ${notification.title}
+                </div>
+                <div class="notification-message">${notification.message}</div>
+                <div class="notification-time">
+                    ${new Date(notification.timestamp).toLocaleTimeString()} 
+                    (${type} - ${notification.priority || 'medium'} priority)
+                </div>
+            `;
+            
+            container.insertBefore(notifDiv, container.firstChild);
+            
+            // Auto-remove after 30 seconds unless high priority
+            if (notification.priority !== 'high' && notification.priority !== 'urgent') {
+                setTimeout(() => {
+                    if (notifDiv.parentNode) {
+                        notifDiv.remove();
+                    }
+                }, 30000);
+            }
+            
+            // Keep only last 10 notifications
+            const notifications = container.children;
+            if (notifications.length > 10) {
+                container.removeChild(notifications[notifications.length - 1]);
+            }
+        }
+
+        function updateNotificationCount() {
+            document.getElementById('notificationCount').textContent = notificationCount;
+        }
+
+        async function authenticateUser() {
+            const resultDiv = document.getElementById('connectionResult');
+            
+            try {
+                // First login to get token
+                const loginResponse = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@qstss.edu.qa',
+                        password: 'admin123'
+                    })
+                });
+
+                const loginData = await loginResponse.json();
+                
+                if (loginResponse.ok) {
+                    authToken = loginData.token;
+                    
+                    // Authenticate with socket
+                    if (socket && socket.connected) {
+                        socket.emit('authenticate', { userId: loginData.teacher._id });
+                        
+                        resultDiv.innerHTML = `
+                            <div class="success">
+                                ✅ Successfully authenticated!<br>
+                                <strong>User:</strong> ${loginData.teacher.firstName} ${loginData.teacher.lastName}<br>
+                                <strong>Role:</strong> ${loginData.teacher.role}<br>
+                                <strong>Socket:</strong> Authenticated for real-time notifications
+                            </div>
+                        `;
+                        
+                        document.getElementById('userCount').textContent = '1 (Admin authenticated)';
+                    } else {
+                        resultDiv.innerHTML = '<div class="warning">⚠️ Please connect to socket first</div>';
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Authentication failed: ${loginData.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Authentication error: ${error.message}</div>`;
+            }
+        }
+
+        async function testRegistrationNotification() {
+            const resultDiv = document.getElementById('registrationResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="warning">⚠️ Please authenticate first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Testing registration notification...</div>';
+            
+            try {
+                // Get competitions and students
+                const [competitionsResponse, studentsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/competitions`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    }),
+                    fetch(`${API_BASE}/students?limit=3`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    })
+                ]);
+
+                const competitions = (await competitionsResponse.json()).data || [];
+                const studentsData = await studentsResponse.json();
+                const students = studentsData.data || studentsData;
+
+                if (competitions.length === 0 || students.length === 0) {
+                    resultDiv.innerHTML = '<div class="warning">⚠️ No competitions or students available for testing</div>';
+                    return;
+                }
+
+                const competition = competitions[0];
+                const testStudents = students.slice(0, 2);
+
+                // Create registration
+                const registrationResponse = await fetch(`${API_BASE}/registrations`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        competitionId: competition._id,
+                        studentIds: testStudents.map(s => s._id)
+                    })
+                });
+
+                const registrationData = await registrationResponse.json();
+                
+                if (registrationResponse.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Registration notification test successful!<br>
+                            <strong>Competition:</strong> ${competition.name}<br>
+                            <strong>Students:</strong> ${testStudents.map(s => s.firstName + ' ' + s.lastName).join(', ')}<br>
+                            <strong>Real-time notification:</strong> Should appear in live feed above
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Registration failed: ${registrationData.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Test error: ${error.message}</div>`;
+            }
+        }
+
+        async function testCompetitionCreation() {
+            const resultDiv = document.getElementById('competitionResult');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = '<div class="warning">⚠️ Please authenticate first</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Creating test competition...</div>';
+            
+            try {
+                const testCompetition = {
+                    name: `Test Competition ${Date.now()}`,
+                    description: 'This is a test competition for notification system',
+                    category: 'Mathematics',
+                    maxParticipants: 50,
+                    startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
+                    endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 2 weeks from now
+                    registrationDeadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+                    eligibleGrades: ['9', '10', '11', '12'],
+                    venue: 'Qatar STSS Main Campus',
+                    organizerName: 'Test Organizer'
+                };
+
+                const response = await fetch(`${API_BASE}/competitions`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testCompetition)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Competition creation notification test successful!<br>
+                            <strong>Competition:</strong> ${data.competition.name}<br>
+                            <strong>Real-time notification:</strong> Should appear in live feed above
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Competition creation failed: ${data.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Test error: ${error.message}</div>`;
+            }
+        }
+
+        function triggerManualRegistration() {
+            // Send a manual test notification
+            if (socket && socket.connected) {
+                const testNotification = {
+                    id: `test_${Date.now()}`,
+                    type: 'registration',
+                    title: '✅ Manual Test Registration',
+                    message: 'This is a manual test notification to verify the real-time system is working properly.',
+                    priority: 'medium',
+                    timestamp: new Date(),
+                    metadata: {
+                        action: 'test',
+                        source: 'manual_test'
+                    }
+                };
+                
+                showLiveNotification(testNotification, 'test');
+                document.getElementById('registrationResult').innerHTML = `
+                    <div class="info">
+                        📋 Manual test notification sent<br>
+                        <strong>Type:</strong> Registration test<br>
+                        <strong>Status:</strong> Simulated successfully
+                    </div>
+                `;
+            } else {
+                document.getElementById('registrationResult').innerHTML = '<div class="warning">⚠️ Please connect to socket first</div>';
+            }
+        }
+
+        function clearLiveNotifications() {
+            document.getElementById('liveNotifications').innerHTML = '';
+            notificationCount = 0;
+            updateNotificationCount();
+            document.getElementById('portalResult').innerHTML = '<div class="info">🧹 Live notifications cleared</div>';
+        }
+
+        function openPortal() {
+            window.open('http://192.168.1.28:3001', '_blank');
+            document.getElementById('portalResult').innerHTML = `
+                <div class="info">
+                    🏫 Teacher portal opened in new tab<br>
+                    <strong>URL:</strong> http://192.168.1.28:3001<br>
+                    <strong>Test flow:</strong> Login → Competitions → Register Students → Check notifications
+                </div>
+            `;
+        }
+
+        function openNotificationsPage() {
+            window.open('http://192.168.1.28:3001/notifications', '_blank');
+            document.getElementById('portalResult').innerHTML = `
+                <div class="info">
+                    🔔 Notifications page opened in new tab<br>
+                    <strong>URL:</strong> http://192.168.1.28:3001/notifications<br>
+                    <strong>Features:</strong> View, filter, and manage all notifications
+                </div>
+            `;
+        }
+
+        // Auto-start connection when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔔 Real-time notification test page loaded');
+            setTimeout(testConnection, 1000);
+        });
+    </script>
+</body>
+</html>

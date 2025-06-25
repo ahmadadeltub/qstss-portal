@@ -66,9 +66,11 @@ const Layout: React.FC = () => {
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Students', icon: <PeopleIcon />, path: '/students' },
-    { text: 'Teachers', icon: <SchoolIcon />, path: '/teachers' },
-    { text: 'Competitions', icon: <CompetitionIcon />, path: '/competitions' },
+    ...(user?.role === 'admin' ? [
+      { text: 'Students', icon: <PeopleIcon />, path: '/students' },
+      { text: 'Teachers', icon: <SchoolIcon />, path: '/teachers' },
+      { text: 'Competitions', icon: <CompetitionIcon />, path: '/competitions' },
+    ] : []),
     { text: 'My Registrations', icon: <RegistrationIcon />, path: '/my-registrations' },
     { text: 'Reports', icon: <ReportsIcon />, path: '/reports' },
     ...(user?.role === 'admin' ? [{ text: 'Admin Panel', icon: <AdminIcon />, path: '/admin' }] : []),

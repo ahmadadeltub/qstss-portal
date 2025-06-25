@@ -142,7 +142,26 @@ const AdminPanel: React.FC = () => {
 
   const [newPassword, setNewPassword] = useState('');
 
-  const departments = ['Mathematics', 'Science', 'English', 'Arabic', 'History', 'Art', 'Physical Education', 'Administration'];
+  const departments = [
+    'STEM Department',
+    'FAB Lab Department',
+    'Energy Department',
+    'Robotics Department',
+    'Project Research Department',
+    'Electronics Projects Department',
+    'Computer Science Department',
+    'Physics Department',
+    'Mathematics Department',
+    'Arabic Language Department',
+    'Islamic Education Department',
+    'English Language Department',
+    'Virtual Reality (VR) Department',
+    'Augmented Reality (AR) Department',
+    'Social Studies Department',
+    'Physical Education Department',
+    'Design Technology Department',
+    'Library Services Department'
+  ];
   const subjectsList = ['Algebra', 'Geometry', 'Biology', 'Chemistry', 'Physics', 'Literature', 'Writing', 'Grammar', 'History', 'Geography', 'Art', 'Music', 'PE'];
   const grades = ['9', '10', '11', '12']; // Qatar Science and Technology Secondary School grades
   const classes = ['A', 'B', 'C', 'D']; // 4 sections per grade
